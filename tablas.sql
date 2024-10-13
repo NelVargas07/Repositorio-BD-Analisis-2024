@@ -6,6 +6,7 @@ GO
 USE GestorDocumentalOIJ;
 GO
 
+--Crear un esquema
 CREATE SCHEMA GD;
 GO
 

@@ -1,17 +1,18 @@
 --USE GestorDocumentalOIJ
 
-CREATE PROCEDURE sp_ActualizarCategoria
-    @Id INT,
-    @Nombre NVARCHAR(255),
-    @Descripcion NVARCHAR(500),
-    @Eliminado BIT
+-- Procedimiento para actualizar categoría
+CREATE PROCEDURE GD.PA_ActualizarCategoria
+    @pN_Id INT,
+    @pC_Nombre NVARCHAR(255),
+    @pC_Descripcion NVARCHAR(500),
+    @pB_Eliminado BIT
 AS
 BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
         
         -- Validar que la categoría exista
-        IF NOT EXISTS (SELECT 1 FROM Categoria WHERE Id = @Id)
+        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Categoria WHERE TN_Id = @pN_Id)
         BEGIN
             RAISERROR('La categoría con el Id especificado no existe.', 16, 1);
             ROLLBACK TRANSACTION;
@@ -19,7 +20,7 @@ BEGIN
         END
         
         -- Validar que el nombre no exista para otra categoría
-        IF EXISTS (SELECT 1 FROM Categoria WHERE Nombre = @Nombre AND Id != @Id)
+        IF EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Categoria WHERE TC_Nombre = @pC_Nombre AND TN_Id != @pN_Id)
         BEGIN
             RAISERROR('Ya existe una categoría con el mismo nombre.', 16, 1);
             ROLLBACK TRANSACTION;
@@ -27,11 +28,11 @@ BEGIN
         END
 
         -- Actualizar la categoría
-        UPDATE Categoria
-        SET Nombre = @Nombre,
-            Descripcion = @Descripcion,
-            Eliminado = @Eliminado
-        WHERE Id = @Id;
+        UPDATE GD.TGESTORDOCUMENTAL_Categoria
+        SET TC_Nombre = @pC_Nombre,
+            TC_Descripcion = @pC_Descripcion,
+            TB_Eliminado = @pB_Eliminado
+        WHERE TN_Id = @pN_Id;
 
         COMMIT TRANSACTION;
         RETURN 0;
@@ -40,23 +41,22 @@ BEGIN
     BEGIN CATCH
         -- Si ocurre algún error, deshacer la transacción
         ROLLBACK TRANSACTION;
-
-        -- Retornar código de error
         RETURN 1;
     END CATCH
 END;
 GO
 
-CREATE PROCEDURE sp_InsertarCategoria
-    @Nombre NVARCHAR(255),
-    @Descripcion NVARCHAR(500)
+-- Procedimiento para insertar nueva categoría
+CREATE PROCEDURE GD.PA_InsertarCategoria
+    @pC_Nombre NVARCHAR(255),
+    @pC_Descripcion NVARCHAR(500)
 AS
 BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
         
         -- Validar que no exista una categoría con el mismo nombre
-        IF EXISTS (SELECT 1 FROM Categoria WHERE Nombre = @Nombre)
+        IF EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Categoria WHERE TC_Nombre = @pC_Nombre)
         BEGIN
             RAISERROR('Ya existe una categoría con el mismo nombre.', 16, 1);
             ROLLBACK TRANSACTION;
@@ -64,8 +64,8 @@ BEGIN
         END
 
         -- Insertar la nueva categoría
-        INSERT INTO Categoria (Nombre, Descripcion, Eliminado)
-        VALUES (@Nombre, @Descripcion, 0);
+        INSERT INTO GD.TGESTORDOCUMENTAL_Categoria (TC_Nombre, TC_Descripcion, TB_Eliminado)
+        VALUES (@pC_Nombre, @pC_Descripcion, 0);
 
         COMMIT TRANSACTION;
         RETURN 0;
@@ -74,22 +74,21 @@ BEGIN
     BEGIN CATCH
         -- Si ocurre algún error, deshacer la transacción
         ROLLBACK TRANSACTION;
-
-        -- Retornar código de error
         RETURN 1;
     END CATCH
 END;
 GO
 
-CREATE PROCEDURE sp_EliminarCategoria
-    @Id INT
+-- Procedimiento para eliminar categoría
+CREATE PROCEDURE GD.PA_EliminarCategoria
+    @pN_Id INT
 AS
 BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
         -- Validar que la categoría exista
-        IF NOT EXISTS (SELECT 1 FROM Categoria WHERE Id = @Id)
+        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Categoria WHERE TN_Id = @pN_Id)
         BEGIN
             RAISERROR('La categoría con el Id especificado no existe.', 16, 1);
             ROLLBACK TRANSACTION;
@@ -97,9 +96,9 @@ BEGIN
         END
 
         -- Eliminar la categoría (eliminado lógico)
-        UPDATE Categoria
-        SET Eliminado = 1
-        WHERE Id = @Id;
+        UPDATE GD.TGESTORDOCUMENTAL_Categoria
+        SET TB_Eliminado = 1
+        WHERE TN_Id = @pN_Id;
 
         COMMIT TRANSACTION;
         RETURN 0;
@@ -108,36 +107,36 @@ BEGIN
     BEGIN CATCH
         -- Si ocurre algún error, deshacer la transacción
         ROLLBACK TRANSACTION;
-
-        -- Retornar código de error
         RETURN 1;
     END CATCH
 END;
 GO
 
-CREATE PROCEDURE sp_ListarCategorias
+-- Procedimiento para listar categorías activas
+CREATE PROCEDURE GD.PA_ListarCategorias
 AS
 BEGIN
-    SELECT Id, Nombre, Descripcion, Eliminado
-    FROM Categoria
-    WHERE Eliminado = 0;
+    SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Eliminado
+    FROM GD.TGESTORDOCUMENTAL_Categoria
+    WHERE TB_Eliminado = 0;
 END;
 GO
 
-CREATE PROCEDURE sp_ObtenerCategoriaPorId
-    @Id INT
+-- Procedimiento para obtener categoría por Id
+CREATE PROCEDURE GD.PA_ObtenerCategoriaPorId
+    @pN_Id INT
 AS
 BEGIN
     -- Validar que la categoría exista
-    IF NOT EXISTS (SELECT 1 FROM Categoria WHERE Id = @Id)
+    IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Categoria WHERE TN_Id = @pN_Id)
     BEGIN
         RAISERROR('La categoría con el Id especificado no existe.', 16, 1);
         RETURN;
     END
 
     -- Devolver la categoría
-    SELECT Id, Nombre, Descripcion, Eliminado
-    FROM Categoria
-    WHERE Id = @Id;
+    SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Eliminado
+    FROM GD.TGESTORDOCUMENTAL_Categoria
+    WHERE TN_Id = @pN_Id;
 END;
 GO
