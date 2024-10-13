@@ -90,7 +90,7 @@ BEGIN
             RETURN 1;
         END
 
-        -- Eliminado lógico
+        -- Eliminado logico
         UPDATE GD.TGESTORDOCUMENTAL_TipoDocumento
         SET TB_Eliminado = 1
         WHERE TN_Id = @pN_Id;
@@ -130,6 +130,6 @@ BEGIN
     -- Devolver el tipo de documento
     SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Eliminado
     FROM GD.TGESTORDOCUMENTAL_TipoDocumento
-    WHERE TN_Id = @pN_Id;
+    WHERE TN_Id = @pN_Id AND TB_Eliminado = 0;
 END;
 GO
