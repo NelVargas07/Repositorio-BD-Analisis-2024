@@ -114,7 +114,10 @@ GO
 CREATE PROCEDURE GD.PA_sp_ListarDocTos
 AS
 BEGIN
-    SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Eliminado
+    SELECT TN_Id as Id,
+	TC_Nombre as Nombre,
+	TC_Descripcion as Descripcion,
+	TB_Eliminado as Eliminado
     FROM GD.TGESTORDOCUMENTAL_DocTo
     WHERE TB_Eliminado = 0;
 END;
@@ -133,7 +136,10 @@ BEGIN
     END
 
     -- Devolver el DocTo
-    SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Eliminado
+    SELECT TN_Id as Id,
+	TC_Nombre as Nombre,
+	TC_Descripcion as Descripcion,
+	TB_Eliminado as Eliminado
     FROM GD.TGESTORDOCUMENTAL_DocTo
     WHERE TN_Id = @pN_Id AND TB_Eliminado = 0;
 END;

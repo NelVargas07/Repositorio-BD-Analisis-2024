@@ -11,7 +11,7 @@ BEGIN
         BEGIN TRANSACTION;
         
         -- Validar que la norma exista
-        IF NOT EXISTS (SELECT 1 FROM Norma WHERE TN_Id = @pN_Id)
+        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Norma WHERE TN_Id = @pN_Id)
         BEGIN
             RAISERROR('La norma con el Id especificado no existe.', 16, 1);
             ROLLBACK TRANSACTION;
@@ -19,7 +19,7 @@ BEGIN
         END
         
         -- Validar que el nombre no exista para otra norma
-        IF EXISTS (SELECT 1 FROM Norma WHERE TC_Nombre = @pC_Nombre AND TN_Id != @pN_Id)
+        IF EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Norma WHERE TC_Nombre = @pC_Nombre AND TN_Id != @pN_Id)
         BEGIN
             RAISERROR('Ya existe una norma con el mismo nombre.', 16, 1);
             ROLLBACK TRANSACTION;
@@ -27,7 +27,7 @@ BEGIN
         END
 
         -- Actualizar la norma
-        UPDATE Norma
+        UPDATE GD.TGESTORDOCUMENTAL_Norma
         SET TC_Nombre = @pC_Nombre,
             TC_Descripcion = @pC_Descripcion,
             TB_Eliminado = @pB_Eliminado
@@ -53,7 +53,7 @@ BEGIN
         BEGIN TRANSACTION;
         
         -- Validar que no exista una norma con el mismo nombre
-        IF EXISTS (SELECT 1 FROM Norma WHERE TC_Nombre = @pC_Nombre)
+        IF EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Norma WHERE TC_Nombre = @pC_Nombre)
         BEGIN
             RAISERROR('Ya existe una norma con el mismo nombre.', 16, 1);
             ROLLBACK TRANSACTION;
@@ -61,7 +61,7 @@ BEGIN
         END
 
         -- Insertar la nueva norma
-        INSERT INTO Norma (TC_Nombre, TC_Descripcion, TB_Eliminado)
+        INSERT INTO GD.TGESTORDOCUMENTAL_Norma (TC_Nombre, TC_Descripcion, TB_Eliminado)
         VALUES (@pC_Nombre, @pC_Descripcion, 0);
 
         COMMIT TRANSACTION;
@@ -79,8 +79,11 @@ CREATE PROCEDURE GD.PA_ListarNormas
 AS
 BEGIN
     -- Devolver todas las normas que no han sido eliminadas
-    SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Eliminado
-    FROM Norma
+    SELECT TN_Id as Id,
+	TC_Nombre as Nombre,
+	TC_Descripcion as Descripcion,
+	TB_Eliminado as Eliminado
+    FROM GD.TGESTORDOCUMENTAL_Norma
     WHERE TB_Eliminado = 0;
 END;
 GO
@@ -90,15 +93,18 @@ CREATE PROCEDURE GD.PA_ObtenerNormaPorId
 AS
 BEGIN
     -- Validar que la norma exista
-    IF NOT EXISTS (SELECT 1 FROM Norma WHERE TN_Id = @pN_Id)
+    IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Norma WHERE TN_Id = @pN_Id)
     BEGIN
         RAISERROR('La norma con el Id especificado no existe.', 16, 1);
         RETURN 1;
     END
 
     -- Devolver la norma
-    SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Eliminado
-    FROM Norma
+    SELECT TN_Id as Id,
+	TC_Nombre as Nombre,
+	TC_Descripcion as Descripcion,
+	TB_Eliminado as Eliminado
+    FROM GD.TGESTORDOCUMENTAL_Norma
     WHERE TN_Id = @pN_Id;
 END;
 GO
@@ -111,7 +117,7 @@ BEGIN
         BEGIN TRANSACTION;
 
         -- Validar que la norma exista
-        IF NOT EXISTS (SELECT 1 FROM Norma WHERE TN_Id = @pN_Id)
+        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Norma WHERE TN_Id = @pN_Id)
         BEGIN
             RAISERROR('La norma con el Id especificado no existe.', 16, 1);
             ROLLBACK TRANSACTION;
@@ -127,7 +133,7 @@ BEGIN
         END
 
         -- Eliminado lógico
-        UPDATE Norma
+        UPDATE GD.TGESTORDOCUMENTAL_Norma
         SET TB_Eliminado = 1
         WHERE TN_Id = @pN_Id;
 

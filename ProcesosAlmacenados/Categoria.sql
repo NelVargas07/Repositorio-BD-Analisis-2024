@@ -116,7 +116,10 @@ GO
 CREATE PROCEDURE GD.PA_ListarCategorias
 AS
 BEGIN
-    SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Eliminado
+    SELECT TN_Id as Id,
+	TC_Nombre as Nombre,
+	TC_Descripcion as Descripcion,
+	TB_Eliminado as Eliminado
     FROM GD.TGESTORDOCUMENTAL_Categoria
     WHERE TB_Eliminado = 0;
 END;
@@ -135,7 +138,10 @@ BEGIN
     END
 
     -- Devolver la categoría
-    SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Eliminado
+    SELECT TN_Id as Id,
+	TC_Nombre as Nombre,
+	TC_Descripcion as Descripcion,
+	TB_Eliminado as Eliminado
     FROM GD.TGESTORDOCUMENTAL_Categoria
     WHERE TN_Id = @pN_Id;
 END;

@@ -116,7 +116,10 @@ GO
 CREATE PROCEDURE GD.PA_ListarClasificaciones
 AS
 BEGIN
-    SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Eliminado
+    SELECT TN_Id as Id,
+	TC_Nombre as Nombre,
+	TC_Descripcion as Descripcion,
+	TB_Eliminado as Eliminado
     FROM GD.TGESTORDOCUMENTAL_Clasificacion
     WHERE TB_Eliminado = 0;
 END;
@@ -135,7 +138,10 @@ BEGIN
     END
 
     -- Devolver la clasificacion
-    SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Eliminado
+    SELECT TN_Id as Id,
+	TC_Nombre as Nombre,
+	TC_Descripcion as Descripcion,
+	TB_Eliminado as Eliminado
     FROM GD.TGESTORDOCUMENTAL_Clasificacion
     WHERE TN_Id = @pN_Id;
 END;

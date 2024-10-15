@@ -135,7 +135,11 @@ GO
 CREATE PROCEDURE GD.PA_ListarSubclasificaciones
 AS
 BEGIN
-    SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Eliminado, TN_ClasificacionID
+    SELECT TN_Id as Id,
+	TC_Nombre as Nombre,
+	TC_Descripcion as Descripcion,
+	TB_Eliminado as Eliminado,
+	TN_ClasificacionID as ClasificacionID
     FROM GD.TGESTORDOCUMENTAL_Subclasificacion
     WHERE TB_Eliminado = 0;
 END;
@@ -154,7 +158,11 @@ BEGIN
     END
 
     -- Devolver la subclasificacion
-    SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Eliminado, TN_ClasificacionID
+    SELECT TN_Id as Id,
+	TC_Nombre as Nombre,
+	TC_Descripcion as Descripcion,
+	TB_Eliminado as Eliminado,
+	TN_ClasificacionID as ClasificacionID
     FROM GD.TGESTORDOCUMENTAL_Subclasificacion
     WHERE TN_Id = @pN_Id;
 END;

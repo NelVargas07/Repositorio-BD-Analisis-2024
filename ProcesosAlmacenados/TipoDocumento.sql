@@ -110,7 +110,10 @@ CREATE PROCEDURE GD.PA_ListarTiposDocumento
 AS
 BEGIN
     -- Devolver todos los tipos de documento que no han sido eliminados
-    SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Eliminado
+    SELECT TN_Id as Id, 
+	TC_Nombre as Nombre, 
+	TC_Descripcion as Descripcion, 
+	TB_Eliminado as Eliminado
     FROM GD.TGESTORDOCUMENTAL_TipoDocumento
     WHERE TB_Eliminado = 0;
 END;
@@ -128,7 +131,10 @@ BEGIN
     END
 
     -- Devolver el tipo de documento
-    SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Eliminado
+    SELECT TN_Id as Id,
+	TC_Nombre as Nombre,
+	TC_Descripcion as Descripcion,
+	TB_Eliminado as Eliminado
     FROM GD.TGESTORDOCUMENTAL_TipoDocumento
     WHERE TN_Id = @pN_Id AND TB_Eliminado = 0;
 END;

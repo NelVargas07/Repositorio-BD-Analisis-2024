@@ -145,18 +145,28 @@ CREATE TABLE GD.TGESTORDOCUMENTAL_Documento (
     TC_Descripcion NVARCHAR(1000),
     TC_PalabraClave NVARCHAR(255),
     TN_CategoriaID INT,
+    TN_TipoDocumento INT,
+    TN_OficinaID INT, --HAY QUE AGREGAR REFERENCIA
+    TC_Vigencia NVARCHAR(255),
     TN_EtapaID INT,
     TN_DocTo INT,
     TB_Activo BIT,
     TB_Descargable BIT,
     TB_Eliminado BIT NOT NULL CONSTRAINT DFDocumentoEliminado DEFAULT 0,
     TN_SubClasificacionID INT,
-    TN_RelacionesDoc INT,
-    TN_ClasificacionID INT,
+    CONSTRAINT FKTipoDocumento_Documento FOREIGN KEY (TN_TipoDocumento) REFERENCES GD.TGESTORDOCUMENTAL_TipoDocumento(TN_Id),
+    CONSTRAINT FKDocTo_Documento FOREIGN KEY (TN_DocTo) REFERENCES GD.TGESTORDOCUMENTAL_DocTo(TN_Id),
     CONSTRAINT FKCategoria_Documento FOREIGN KEY (TN_CategoriaID) REFERENCES GD.TGESTORDOCUMENTAL_Categoria(TN_Id),
     CONSTRAINT FKEtapa_Documento FOREIGN KEY (TN_EtapaID) REFERENCES GD.TGESTORDOCUMENTAL_Etapa(TN_Id),
-    CONSTRAINT FKSubClasificacion_Documento FOREIGN KEY (TN_SubClasificacionID) REFERENCES GD.TGESTORDOCUMENTAL_Subclasificacion(TN_Id),
-    CONSTRAINT FKClasificacion_Documento FOREIGN KEY (TN_ClasificacionID) REFERENCES GD.TGESTORDOCUMENTAL_Clasificacion(TN_Id)
+    CONSTRAINT FKSubClasificacion_Documento FOREIGN KEY (TN_SubClasificacionID) REFERENCES GD.TGESTORDOCUMENTAL_Subclasificacion(TN_Id)
+);
+
+CREATE TABLE GD.TGESTORDOCUMENTAL_Documento_Documento(
+    TN_DocumentoID INT,
+    TN_DocTo INT,
+    TC_DocRelaciona NVARCHAR(255),
+    CONSTRAINT FKDocTo_Documento_Documento FOREIGN KEY (TN_DocTo) REFERENCES GD.TGESTORDOCUMENTAL_DocTo(TN_Id),
+    CONSTRAINT FKDocumento_Documento FOREIGN KEY (TN_DocumentoID) REFERENCES GD.TGESTORDOCUMENTAL_Documento(TN_Id)
 );
 
 -- Tabla Version
@@ -168,6 +178,6 @@ CREATE TABLE GD.TGESTORDOCUMENTAL_Version (
     TC_UrlVersion NVARCHAR(500),
     TB_Eliminado BIT NOT NULL CONSTRAINT DFVersionEliminado DEFAULT 0,
     TN_UsuarioID INT,
-    CONSTRAINT FKDocumento_Version FOREIGN KEY (TN_DocumentoID) REFERENCES GD.TGESTORDOCUMENTAL_Documento(TN_Id),
-    CONSTRAINT FKUsuario_Version FOREIGN KEY (TN_UsuarioID) REFERENCES GD.TGESTORDOCUMENTAL_Usuario(TN_Id)
+    CONSTRAINT FKDocumento_Version FOREIGN KEY (TN_DocumentoID) REFERENCES GD.TGESTORDOCUMENTAL_Documento(TN_Id)
+    --CONSTRAINT FKUsuario_Version FOREIGN KEY (TN_UsuarioID) REFERENCES GD.TGESTORDOCUMENTAL_Usuario(TN_Id)
 );
