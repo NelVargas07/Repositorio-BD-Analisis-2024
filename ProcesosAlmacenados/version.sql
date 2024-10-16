@@ -105,9 +105,9 @@ BEGIN
            TN_DocumentoID AS DocumentoID, 
            TN_NumeroVersion AS NumeroVersion, 
            TF_FechaCreacion AS FechaCreacion, 
-           TC_UrlVersion AS UrlVersion, 
-           TB_Eliminado AS Eliminado, 
-           TN_UsuarioID AS UsuarioID
+           TC_UrlVersion AS urlVersion, 
+           TB_Eliminado AS eliminado, 
+           TN_UsuarioID AS usuarioID
     FROM GD.TGESTORDOCUMENTAL_Version
     WHERE TN_Id = @pN_Id;
 END;
@@ -121,15 +121,15 @@ BEGIN
            TN_DocumentoID AS DocumentoID, 
            TN_NumeroVersion AS NumeroVersion, 
            TF_FechaCreacion AS FechaCreacion, 
-           TC_UrlVersion AS UrlVersion, 
-           TB_Eliminado AS Eliminado, 
-           TN_UsuarioID AS UsuarioID
+           TC_UrlVersion AS urlVersion, 
+           TB_Eliminado AS eliminado, 
+           TN_UsuarioID AS usuarioID
     FROM GD.TGESTORDOCUMENTAL_Version
     WHERE TB_Eliminado = 0;
 END;
 GO
 
-CREATE PROCEDURE GD.PA_ListarVersionesPorDocumentoID
+CREATE PROCEDURE GD.PA_ListarVersionPorDocumentoID
     @pN_DocumentoID INT
 AS
 BEGIN
@@ -140,16 +140,18 @@ BEGIN
         RETURN;
     END
 
-    -- Devolver las versiones del documento que no están marcadas como eliminadas
-    SELECT TN_Id AS Id, 
-           TN_DocumentoID AS DocumentoID, 
-           TN_NumeroVersion AS NumeroVersion, 
-           TF_FechaCreacion AS FechaCreacion, 
-           TC_UrlVersion AS UrlVersion, 
-           TB_Eliminado AS Eliminado, 
-           TN_UsuarioID AS UsuarioID
+    -- Devolver la versión más reciente del documento que no esté eliminada
+    SELECT TOP 1 TN_Id AS Id, 
+                 TN_DocumentoID AS DocumentoID, 
+                 TN_NumeroVersion AS NumeroVersion, 
+                 TF_FechaCreacion AS FechaCreacion, 
+                 TC_UrlVersion AS UrlVersion, 
+                 TB_Eliminado AS Eliminado, 
+                 TN_UsuarioID AS UsuarioID
     FROM GD.TGESTORDOCUMENTAL_Version
     WHERE TN_DocumentoID = @pN_DocumentoID
-      AND TB_Eliminado = 0;
+      AND TB_Eliminado = 0
+    ORDER BY TN_NumeroVersion DESC, TF_FechaCreacion DESC; -- Orden por número de versión y fecha de creación para obtener la más reciente
 END;
 GO
+

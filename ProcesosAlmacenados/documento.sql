@@ -1,7 +1,6 @@
 --USE GestorDocumentalOIJ
-
 -- Procedimiento para insertar un nuevo documento
-CREATE PROCEDURE GD.PA_InsertarDocumento
+CREATE or alter PROCEDURE GD.PA_InsertarDocumento
     @pC_Codigo NVARCHAR(255),
     @pC_Asunto NVARCHAR(255),
     @pC_Descripcion NVARCHAR(1000),
@@ -12,6 +11,9 @@ CREATE PROCEDURE GD.PA_InsertarDocumento
     @pC_Vigencia NVARCHAR(255),
     @pN_EtapaID INT,
     @pN_SubClasificacionID INT,
+	@pB_Activo BIT,
+	@pB_Descargable BIT,
+	@pN_DocToID INT,
     @pC_Doctos NVARCHAR(MAX) -- JSON con m�ltiples registros de documentos
 AS
 BEGIN
@@ -49,8 +51,8 @@ BEGIN
         END
 
         -- Insertar el nuevo documento
-        INSERT INTO GD.TGESTORDOCUMENTAL_Documento (TC_Codigo, TC_Asunto, TC_Descripcion, TC_PalabraClave, TN_CategoriaID, TN_TipoDocumento, TN_OficinaID, TC_Vigencia, TN_EtapaID, TN_SubClasificacionID)
-        VALUES (@pC_Codigo, @pC_Asunto, @pC_Descripcion, @pC_PalabraClave, @pN_CategoriaID, @pN_TipoDocumento, @pN_OficinaID, @pC_Vigencia, @pN_EtapaID, @pN_SubClasificacionID);
+        INSERT INTO GD.TGESTORDOCUMENTAL_Documento (TC_Codigo, TC_Asunto, TC_Descripcion, TC_PalabraClave, TN_CategoriaID, TN_TipoDocumento, TN_OficinaID, TC_Vigencia, TN_EtapaID, TN_SubClasificacionID, TN_DocTo, TB_Activo,TB_Descargable)
+        VALUES (@pC_Codigo, @pC_Asunto, @pC_Descripcion, @pC_PalabraClave, @pN_CategoriaID, @pN_TipoDocumento, @pN_OficinaID, @pC_Vigencia, @pN_EtapaID, @pN_SubClasificacionID,@pN_DocToID,@pB_Activo,@pB_Descargable);
 
         DECLARE @TN_DocumentoID INT = SCOPE_IDENTITY(); -- Obtener el ID del nuevo documento
 
@@ -63,9 +65,10 @@ BEGIN
         BEGIN
             DECLARE @docto INT = JSON_VALUE(@JSON, CONCAT('$[', @i, '].docto'));
             DECLARE @docRelacionado NVARCHAR(255) = JSON_VALUE(@JSON, CONCAT('$[', @i, '].docRelacionado'));
-
+			select @docto
+			select @docRelacionado
             -- Validar que el documento exista
-            IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Documento WHERE TN_Id = @docto)
+            IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_DocTo WHERE TN_Id = @docto)
             BEGIN
                 ROLLBACK TRANSACTION;
                 RETURN 1;
@@ -87,7 +90,7 @@ BEGIN
 END;
 GO
 
-CREATE PROCEDURE GD.PA_ActualizarDocumento
+CREATE OR ALTER PROCEDURE GD.PA_ActualizarDocumento
     @pN_Id INT,
     @pC_Codigo NVARCHAR(255),
     @pC_Asunto NVARCHAR(255),
@@ -98,8 +101,10 @@ CREATE PROCEDURE GD.PA_ActualizarDocumento
     @pN_OficinaID INT,
     @pC_Vigencia NVARCHAR(255),
     @pN_EtapaID INT,
-    @pN_DocTo INT,
+    @pN_DocToID INT,
     @pN_SubClasificacionID INT,
+	@pB_Activo BIT,
+	@pB_Descargable BIT,
     @pC_Doctos NVARCHAR(MAX)
 AS
 BEGIN
@@ -127,11 +132,11 @@ BEGIN
         END
 
         -- Validar que la oficina exista
-        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Oficina WHERE TN_Id = @pN_OficinaID)
-        BEGIN
-            ROLLBACK TRANSACTION;
-            RETURN 1;  -- Oficina no existe
-        END
+        --IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Oficina WHERE TN_Id = @pN_OficinaID)
+        --BEGIN
+        --    ROLLBACK TRANSACTION;
+        --    RETURN 1;  -- Oficina no existe
+        --END
 
         -- Validar que la etapa exista
         IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Etapa WHERE TN_Id = @pN_EtapaID)
@@ -141,7 +146,7 @@ BEGIN
         END
 
         -- Validar que el DocTo exista
-        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_DocTo WHERE TN_Id = @pN_DocTo)
+        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_DocTo WHERE TN_Id = @pN_DocToID)
         BEGIN
             ROLLBACK TRANSACTION;
             RETURN 1;  -- DocTo no existe
@@ -165,7 +170,9 @@ BEGIN
             TN_OficinaID = @pN_OficinaID,
             TC_Vigencia = @pC_Vigencia,
             TN_EtapaID = @pN_EtapaID,
-            TN_DocTo = @pN_DocTo,
+            TN_DocTo = @pN_DocToID,
+			TB_Activo = @pB_Activo,
+			TB_Descargable = @pB_Descargable,
             TN_SubClasificacionID = @pN_SubClasificacionID
         WHERE TN_Id = @pN_Id;
 
@@ -240,17 +247,36 @@ END;
 GO
 
 -- Procedimiento para listar todos los documentos no eliminados
-CREATE PROCEDURE GD.PA_sp_ListarDocumentos
+CREATE or alter PROCEDURE GD.PA_ListarDocumentos
 AS
 BEGIN
-    SELECT TN_Id, TC_Codigo, TC_Asunto, TC_Descripcion, TC_PalabraClave, TN_CategoriaID, TN_EtapaID, TN_DocTo, TB_Activo, TB_Descargable, TN_SubClasificacionID, TN_RelacionesDoc
-    FROM GD.TGESTORDOCUMENTAL_Documento
-    WHERE TB_Eliminado = 0;
+    SELECT 
+		D.TN_Id AS Id, --
+        D.TC_Codigo AS Codigo, --
+        D.TC_Asunto AS Nombre, --
+        D.TN_CategoriaID AS CategoriaID, --
+        D.TN_TipoDocumento AS TipoDocumento, --
+        D.TN_OficinaID AS OficinaID, --
+        D.TC_Vigencia AS Vigencia, --
+        D.TN_EtapaID AS EtapaID, --
+        D.TN_DocTo AS DocToID, --
+        D.TN_SubClasificacionID AS SubClasificacionID,
+		N.TN_Id AS NormaID,--
+		ISNULL(V.TN_Id,0) AS VersionID,--
+		C.TN_Id AS ClasificacionID--
+    FROM GD.TGESTORDOCUMENTAL_Documento D
+	JOIN GD.TGESTORDOCUMENTAL_Etapa E on e.TN_Id = d.TN_EtapaID
+	JOIN GD.TGESTORDOCUMENTAL_Norma N ON N.TN_Id = E.TN_NormaID
+	LEFT JOIN GD.TGESTORDOCUMENTAL_Version V ON V.TN_DocumentoID = D.TN_Id
+	JOIN GD.TGESTORDOCUMENTAL_Subclasificacion SC ON SC.TN_Id = D.TN_SubClasificacionID
+	JOIN GD.TGESTORDOCUMENTAL_Clasificacion C ON C.TN_Id = SC.TN_ClasificacionID
+	WHERE D.TB_Eliminado = 0
+	ORDER BY V.TN_NumeroVersion DESC, V.TF_FechaCreacion DESC;
 END;
 GO
 
 -- Procedimiento para obtener un documento por su Id
-CREATE PROCEDURE GD.PA_ObtenerDocumentoPorId
+CREATE OR ALTER PROCEDURE GD.PA_ObtenerDocumentoPorId
     @pN_Id INT
 AS
 BEGIN
@@ -269,7 +295,7 @@ BEGIN
         TC_Descripcion AS Descripcion, 
         TC_PalabraClave AS PalabraClave, 
         TN_CategoriaID AS CategoriaID, 
-        TN_TipoDocumento AS TipoDocumentoID, 
+        TN_TipoDocumento AS TipoDocumento, 
         TN_OficinaID AS OficinaID, 
         TC_Vigencia AS Vigencia, 
         TN_EtapaID AS EtapaID, 
@@ -283,7 +309,7 @@ BEGIN
                         FROM GD.TGESTORDOCUMENTAL_Documento_Documento
                         WHERE TN_DocumentoID = @pN_Id
                         FOR JSON PATH)) 
-        ) AS Relaciones
+        ) AS doctos
     FROM GD.TGESTORDOCUMENTAL_Documento
     WHERE TN_Id = @pN_Id;
 

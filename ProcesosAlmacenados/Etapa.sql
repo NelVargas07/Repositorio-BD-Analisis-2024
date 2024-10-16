@@ -163,15 +163,16 @@ CREATE PROCEDURE GD.PA_ListarEtapas
 AS
 BEGIN
     -- Devolver todas las etapas que no han sido eliminadas y sus relaciones de padre si existen
-    SELECT E.TN_Id as Id,
+    SELECT 
+	E.TN_Id as Id,
 	E.TC_Nombre as Nombre,
 	E.TC_Descripcion as Descripcion,
 	E.TB_Eliminado as eliminado,
 	E.TC_Color as color,
 	E.TN_NormaID as normaID, 
-	EE.TN_EtapaPadreID as EtapaPadreID
+	isnull(EE.TN_EtapaPadreID,0) as EtapaPadreID
     FROM GD.TGESTORDOCUMENTAL_Etapa E
-    JOIN GD.TGESTORDOCUMENTAL_Etapa_Etapa EE ON EE.TN_EtapaID = E.TN_Id
+    left JOIN GD.TGESTORDOCUMENTAL_Etapa_Etapa EE ON EE.TN_EtapaID = E.TN_Id
     WHERE E.TB_Eliminado = 0;
 END;
 GO
