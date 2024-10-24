@@ -266,10 +266,6 @@ BEGIN
                 @pC_Comando = @pC_Comando,
                 @pN_OficinaID = @pN_OficinaID;
 
-            RAISERROR(@pC_Comando, 16, 1);
-            ROLLBACK TRANSACTION;
-            RETURN 1;
-
         COMMIT TRANSACTION;
         RETURN 0;
 
