@@ -1,8 +1,14 @@
+--USE GestorDocumentalOIJ
+
 CREATE PROCEDURE GD.PA_InsertarVersion
     @pN_DocumentoID INT,
     @pN_NumeroVersion INT,
     @pC_UrlVersion NVARCHAR(500),
-    @pN_UsuarioID INT
+    @pC_NumeroSCD NVARCHAR(200),
+    @pC_Justificacion NVARCHAR(500),
+    @pN_UsuarioID INT,
+    @pB_DocDinamico BIT,
+    @pB_Obsoleto BIT
 AS
 BEGIN
     BEGIN TRANSACTION;
@@ -15,8 +21,10 @@ BEGIN
         END
 
         -- Insertar nueva versión
-        INSERT INTO GD.TGESTORDOCUMENTAL_Version (TN_DocumentoID, TN_NumeroVersion, TC_UrlVersion, TN_UsuarioID)
-        VALUES (@pN_DocumentoID, @pN_NumeroVersion, @pC_UrlVersion, @pN_UsuarioID);
+        INSERT INTO GD.TGESTORDOCUMENTAL_Version 
+        (TN_DocumentoID, TN_NumeroVersion, TC_UrlVersion, TN_UsuarioID, TB_DocDinamico, TB_Obsoleto, TC_NumeroSCD, TC_Justificacion)
+        VALUES 
+        (@pN_DocumentoID, @pN_NumeroVersion, @pC_UrlVersion, @pN_UsuarioID, @pB_DocDinamico, @pB_Obsoleto, @pC_NumeroSCD, @pC_Justificacion);
 
         COMMIT TRANSACTION;
         RETURN 0; -- Inserción exitosa
@@ -28,11 +36,16 @@ BEGIN
 END;
 GO
 
+
 CREATE PROCEDURE GD.PA_ActualizarVersion
     @pN_Id INT,
     @pN_NumeroVersion INT,
     @pC_UrlVersion NVARCHAR(500),
-    @pN_UsuarioID INT
+    @pC_NumeroSCD NVARCHAR(200),
+    @pC_Justificacion NVARCHAR(500),
+    @pN_UsuarioID INT,
+    @pB_DocDinamico BIT,
+    @pB_Obsoleto BIT
 AS
 BEGIN
     BEGIN TRANSACTION;
@@ -48,7 +61,11 @@ BEGIN
         UPDATE GD.TGESTORDOCUMENTAL_Version
         SET TN_NumeroVersion = @pN_NumeroVersion,
             TC_UrlVersion = @pC_UrlVersion,
-            TN_UsuarioID = @pN_UsuarioID
+            TN_UsuarioID = @pN_UsuarioID,
+            TB_DocDinamico = @pB_DocDinamico,
+            TB_Obsoleto = @pB_Obsoleto,
+            TC_NumeroSCD = @pC_NumeroSCD,
+            TC_Justificacion = @pC_Justificacion
         WHERE TN_Id = @pN_Id;
 
         COMMIT TRANSACTION;
@@ -60,6 +77,7 @@ BEGIN
     END CATCH
 END;
 GO
+
 
 CREATE PROCEDURE GD.PA_EliminarVersion
     @pN_Id INT
@@ -89,6 +107,7 @@ BEGIN
 END;
 GO
 
+
 CREATE PROCEDURE GD.PA_ObtenerVersionPorId
     @pN_Id INT
 AS
@@ -102,12 +121,16 @@ BEGIN
 
     -- Devolver la versión
     SELECT TN_Id AS Id, 
-           TN_DocumentoID AS DocumentoID, 
-           TN_NumeroVersion AS NumeroVersion, 
-           TF_FechaCreacion AS FechaCreacion, 
-           TC_UrlVersion AS urlVersion, 
-           TB_Eliminado AS eliminado, 
-           TN_UsuarioID AS usuarioID
+            TN_DocumentoID AS DocumentoID, 
+            TN_NumeroVersion AS NumeroVersion, 
+            TF_FechaCreacion AS FechaCreacion, 
+            TC_UrlVersion AS urlVersion, 
+            TB_Eliminado AS eliminado, 
+            TN_UsuarioID AS usuarioID,
+            TB_DocDinamico AS DocDinamico,
+            TB_Obsoleto AS Obsoleto,
+            TC_NumeroSCD AS NumeroSCD,
+            TC_Justificacion AS justificacion
     FROM GD.TGESTORDOCUMENTAL_Version
     WHERE TN_Id = @pN_Id;
 END;
@@ -118,12 +141,16 @@ AS
 BEGIN
     -- Devolver todas las versiones que no están marcadas como eliminadas
     SELECT TN_Id AS Id, 
-           TN_DocumentoID AS DocumentoID, 
-           TN_NumeroVersion AS NumeroVersion, 
-           TF_FechaCreacion AS FechaCreacion, 
-           TC_UrlVersion AS urlVersion, 
-           TB_Eliminado AS eliminado, 
-           TN_UsuarioID AS usuarioID
+            TN_DocumentoID AS DocumentoID, 
+            TN_NumeroVersion AS NumeroVersion, 
+            TF_FechaCreacion AS FechaCreacion, 
+            TC_UrlVersion AS urlVersion, 
+            TB_Eliminado AS eliminado, 
+            TN_UsuarioID AS usuarioID,
+            TB_DocDinamico AS DocDinamico,
+            TB_Obsoleto AS Obsoleto,
+            TC_NumeroSCD AS NumeroSCD,
+            TC_Justificacion AS justificacion
     FROM GD.TGESTORDOCUMENTAL_Version
     WHERE TB_Eliminado = 0;
 END;
@@ -141,17 +168,22 @@ BEGIN
     END
 
     -- Devolver la versión más reciente del documento que no esté eliminada
-    SELECT TOP 1 TN_Id AS Id, 
+    SELECT TN_Id AS Id, 
                  TN_DocumentoID AS DocumentoID, 
                  TN_NumeroVersion AS NumeroVersion, 
                  TF_FechaCreacion AS FechaCreacion, 
-                 TC_UrlVersion AS UrlVersion, 
-                 TB_Eliminado AS Eliminado, 
-                 TN_UsuarioID AS UsuarioID
+                 TC_UrlVersion AS urlVersion, 
+                 TB_Eliminado AS eliminado, 
+                 TN_UsuarioID AS usuarioID,
+                 TB_DocDinamico AS DocDinamico,
+                 TB_Obsoleto AS Obsoleto,
+                 TC_NumeroSCD AS NumeroSCD,
+                 TC_Justificacion AS justificacion
     FROM GD.TGESTORDOCUMENTAL_Version
     WHERE TN_DocumentoID = @pN_DocumentoID
       AND TB_Eliminado = 0
-    ORDER BY TN_NumeroVersion DESC, TF_FechaCreacion DESC; -- Orden por número de versión y fecha de creación para obtener la más reciente
+    ORDER BY TN_NumeroVersion DESC, TF_FechaCreacion DESC; -- Orden para obtener la más reciente
 END;
 GO
+
 

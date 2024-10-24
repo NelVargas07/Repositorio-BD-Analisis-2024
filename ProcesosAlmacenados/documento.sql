@@ -250,6 +250,16 @@ GO
 CREATE or alter PROCEDURE GD.PA_ListarDocumentos
 AS
 BEGIN
+	WITH Versiones AS (
+		SELECT 
+			V.TN_Id AS VersionID,
+			V.TN_DocumentoID,
+			V.TC_UrlVersion,
+			V.TN_NumeroVersion,
+			V.TF_FechaCreacion,
+			ROW_NUMBER() OVER (PARTITION BY V.TN_DocumentoID ORDER BY V.TN_NumeroVersion DESC, V.TF_FechaCreacion DESC) AS rn
+		FROM GD.TGESTORDOCUMENTAL_Version V
+	)
     SELECT 
 		D.TN_Id AS Id, --
         D.TC_Codigo AS Codigo, --
@@ -262,7 +272,76 @@ BEGIN
         D.TN_DocTo AS DocToID, --
         D.TN_SubClasificacionID AS SubClasificacionID,
 		N.TN_Id AS NormaID,--
+		ISNULL(V.VersionID,0) AS VersionID,--
+		C.TN_Id AS ClasificacionID--
+    FROM GD.TGESTORDOCUMENTAL_Documento D
+	JOIN GD.TGESTORDOCUMENTAL_Etapa E on e.TN_Id = d.TN_EtapaID
+	JOIN GD.TGESTORDOCUMENTAL_Norma N ON N.TN_Id = E.TN_NormaID
+	LEFT JOIN Versiones V ON V.TN_DocumentoID = D.TN_Id AND V.rn = 1
+	JOIN GD.TGESTORDOCUMENTAL_Subclasificacion SC ON SC.TN_Id = D.TN_SubClasificacionID
+	JOIN GD.TGESTORDOCUMENTAL_Clasificacion C ON C.TN_Id = SC.TN_ClasificacionID
+	WHERE D.TB_Eliminado = 0
+END;
+GO
+
+CREATE OR ALTER PROCEDURE GD.PA_ListarDocumentosConsulta
+AS
+BEGIN
+    WITH Versiones AS (
+        SELECT 
+            V.TN_Id AS VersionID,
+            V.TN_DocumentoID,
+            V.TC_UrlVersion,
+            V.TN_NumeroVersion,
+            V.TF_FechaCreacion,
+            ROW_NUMBER() OVER (PARTITION BY V.TN_DocumentoID ORDER BY V.TN_NumeroVersion DESC, V.TF_FechaCreacion DESC) AS rn
+        FROM GD.TGESTORDOCUMENTAL_Version V
+    )
+    SELECT 
+        D.TN_Id AS Id,
+        D.TC_Codigo AS Codigo,
+        D.TC_Asunto AS Nombre,
+        D.TC_Descripcion AS Descripcion,
+        D.TN_CategoriaID AS CategoriaID,
+        D.TN_TipoDocumento AS TipoDocumento,
+        D.TC_PalabraClave AS PalabraClave,
+        D.TN_OficinaID AS OficinaID,
+        D.TC_Vigencia AS Vigencia,
+        D.TN_EtapaID AS EtapaID,
+        D.TN_DocTo AS DocToID,
+        D.TN_SubClasificacionID AS SubClasificacionID,
+        N.TN_Id AS NormaID,
+        ISNULL(V.TN_NumeroVersion, 0) AS VersionID,
+        C.TN_Id AS ClasificacionID,
+        D.TB_Descargable AS descargable,
+        V.TC_UrlVersion AS urlVersion
+    FROM GD.TGESTORDOCUMENTAL_Documento D
+    JOIN GD.TGESTORDOCUMENTAL_Etapa E ON E.TN_Id = D.TN_EtapaID
+    JOIN GD.TGESTORDOCUMENTAL_Norma N ON N.TN_Id = E.TN_NormaID
+    LEFT JOIN Versiones V ON V.TN_DocumentoID = D.TN_Id AND V.rn = 1
+    JOIN GD.TGESTORDOCUMENTAL_Subclasificacion SC ON SC.TN_Id = D.TN_SubClasificacionID
+    JOIN GD.TGESTORDOCUMENTAL_Clasificacion C ON C.TN_Id = SC.TN_ClasificacionID
+    WHERE D.TB_Eliminado = 0 AND D.TB_Activo = 1
+    ORDER BY D.TN_Id; -- Puedes ajustar el orden según lo necesites
+END;
+GO
+
+
+/*
+CREATE or alter PROCEDURE GD.PA_ListarDocumentosConsultaHorizontal
+AS
+BEGIN
+    SELECT 
+		D.TN_Id AS Id, --
+        D.TC_Codigo AS Codigo, --
+        D.TN_CategoriaID AS CategoriaID, --
+        D.TN_TipoDocumento AS TipoDocumento, --
+        D.TN_OficinaID AS OficinaID, --
+        D.TC_Vigencia AS Vigencia, --
+        D.TN_DocTo AS DocToID, --
+		N.TN_Id AS NormaID,--
 		ISNULL(V.TN_Id,0) AS VersionID,--
+		V.TC_UrlVersion AS urlVersion, 
 		C.TN_Id AS ClasificacionID--
     FROM GD.TGESTORDOCUMENTAL_Documento D
 	JOIN GD.TGESTORDOCUMENTAL_Etapa E on e.TN_Id = d.TN_EtapaID
@@ -274,6 +353,36 @@ BEGIN
 	ORDER BY V.TN_NumeroVersion DESC, V.TF_FechaCreacion DESC;
 END;
 GO
+
+CREATE or alter PROCEDURE GD.PA_ListarDocumentosConsultaVerticalProceso
+AS
+BEGIN
+    SELECT 
+		D.TN_Id AS Id, --
+        D.TN_OficinaID AS OficinaID, --
+		ISNULL(V.TN_Id,0) AS VersionID,--
+		V.TC_UrlVersion AS urlVersion
+    FROM GD.TGESTORDOCUMENTAL_Documento D
+	LEFT JOIN GD.TGESTORDOCUMENTAL_Version V ON V.TN_DocumentoID = D.TN_Id
+	WHERE D.TB_Eliminado = 0
+	ORDER BY V.TN_NumeroVersion DESC, V.TF_FechaCreacion DESC;
+END;
+GO
+
+CREATE or alter PROCEDURE GD.PA_ListarDocumentosConsultaVerticalFiltro
+AS
+BEGIN
+    SELECT 
+		D.TN_Id AS Id, --
+        D.TN_OficinaID AS OficinaID, --
+		ISNULL(V.TN_Id,0) AS VersionID,--
+		V.TC_UrlVersion AS urlVersion
+    FROM GD.TGESTORDOCUMENTAL_Documento D
+	LEFT JOIN GD.TGESTORDOCUMENTAL_Version V ON V.TN_DocumentoID = D.TN_Id
+	WHERE D.TB_Eliminado = 0
+	ORDER BY V.TN_NumeroVersion DESC, V.TF_FechaCreacion DESC;
+END;
+GO*/
 
 -- Procedimiento para obtener un documento por su Id
 CREATE OR ALTER PROCEDURE GD.PA_ObtenerDocumentoPorId
@@ -289,29 +398,37 @@ BEGIN
 
     -- Devolver el documento con todas las columnas y las relaciones en formato JSON
     SELECT 
-        TN_Id AS Id, 
-        TC_Codigo AS Codigo, 
-        TC_Asunto AS Asunto, 
-        TC_Descripcion AS Descripcion, 
-        TC_PalabraClave AS PalabraClave, 
-        TN_CategoriaID AS CategoriaID, 
-        TN_TipoDocumento AS TipoDocumento, 
-        TN_OficinaID AS OficinaID, 
-        TC_Vigencia AS Vigencia, 
-        TN_EtapaID AS EtapaID, 
-        TN_DocTo AS DocToID, 
-        TB_Activo AS Activo, 
-        TB_Descargable AS Descargable, 
-        TB_Eliminado AS Eliminado, 
-        TN_SubClasificacionID AS SubClasificacionID,
+        D.TN_Id AS Id, 
+        D.TC_Codigo AS Codigo, 
+        D.TC_Asunto AS Asunto, 
+        D.TC_Descripcion AS Descripcion, 
+        D.TC_PalabraClave AS PalabraClave, 
+        D.TN_CategoriaID AS CategoriaID, 
+        D.TN_TipoDocumento AS TipoDocumento, 
+        D.TN_OficinaID AS OficinaID, 
+        D.TC_Vigencia AS Vigencia, 
+        D.TN_EtapaID AS EtapaID, 
+        D.TN_DocTo AS DocToID, 
+        D.TB_Activo AS Activo, 
+        D.TB_Descargable AS Descargable, 
+        D.TB_Eliminado AS Eliminado, 
+        D.TN_SubClasificacionID AS SubClasificacionID,
+        N.TN_Id AS NormaID,--
+        C.TN_Id AS ClasificacionID,--
+		ISNULL(V.TN_Id,0) AS VersionID,--
         (SELECT 
             JSON_QUERY((SELECT TN_DocTo AS docto, TC_DocRelaciona AS docRelacionado
                         FROM GD.TGESTORDOCUMENTAL_Documento_Documento
                         WHERE TN_DocumentoID = @pN_Id
                         FOR JSON PATH)) 
         ) AS doctos
-    FROM GD.TGESTORDOCUMENTAL_Documento
-    WHERE TN_Id = @pN_Id;
+    FROM GD.TGESTORDOCUMENTAL_Documento D
+	LEFT JOIN GD.TGESTORDOCUMENTAL_Version V ON V.TN_DocumentoID = D.TN_Id
+    JOIN GD.TGESTORDOCUMENTAL_Etapa E on e.TN_Id = D.TN_EtapaID
+	JOIN GD.TGESTORDOCUMENTAL_Norma N ON N.TN_Id = E.TN_NormaID
+    JOIN GD.TGESTORDOCUMENTAL_Subclasificacion SC ON SC.TN_Id = D.TN_SubClasificacionID
+	JOIN GD.TGESTORDOCUMENTAL_Clasificacion C ON C.TN_Id = SC.TN_ClasificacionID
+    WHERE D.TN_Id = @pN_Id;
 
     RETURN 0; -- Operación exitosa
 END;
