@@ -317,7 +317,7 @@ BEGIN
 
 		IF EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Etapa WHERE TN_NormaID = @pN_Id and TB_Eliminado = 0)
         BEGIN
-            SET @pC_Comando = 'La norma con el Id '+ + CAST(@pN_Id AS NVARCHAR(10) +' esta ligada a una etapa por lo cual no se puede eliminar.';
+            SET @pC_Comando = 'La norma con el Id '+ CAST(@pN_Id AS NVARCHAR(10)) +' esta ligada a una etapa por lo cual no se puede eliminar.';
             EXEC GD.PA_InsertarBitacora 
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
