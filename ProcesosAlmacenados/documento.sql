@@ -454,6 +454,7 @@ CREATE or alter PROCEDURE GD.PA_InsertarDocumento
 	@pB_Descargable BIT,
 	@pN_DocToID INT,
     @pN_UsuarioID INT, 
+    @pN_OficinaBitacoraID INT,
     @pC_Doctos NVARCHAR(MAX)
 AS
 BEGIN
@@ -471,7 +472,7 @@ BEGIN
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
-                @pN_OficinaID = @pN_OficinaID;
+                @pN_OficinaID = @pN_OficinaBitacoraID;
 
             RAISERROR(@pC_Comando, 16, 1);
             ROLLBACK TRANSACTION;
@@ -485,7 +486,7 @@ BEGIN
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
-                @pN_OficinaID = @pN_OficinaID;
+                @pN_OficinaID = @pN_OficinaBitacoraID;
 
             RAISERROR(@pC_Comando, 16, 1);
             ROLLBACK TRANSACTION;
@@ -499,7 +500,7 @@ BEGIN
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
-                @pN_OficinaID = @pN_OficinaID;
+                @pN_OficinaID = @pN_OficinaBitacoraID;
 
             RAISERROR(@pC_Comando, 16, 1);
             ROLLBACK TRANSACTION;
@@ -513,7 +514,7 @@ BEGIN
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
-                @pN_OficinaID = @pN_OficinaID;
+                @pN_OficinaID = @pN_OficinaBitacoraID;
 
             RAISERROR(@pC_Comando, 16, 1);
             ROLLBACK TRANSACTION;
@@ -527,7 +528,7 @@ BEGIN
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
-                @pN_OficinaID = @pN_OficinaID;
+                @pN_OficinaID = @pN_OficinaBitacoraID;
 
             RAISERROR(@pC_Comando, 16, 1);
             ROLLBACK TRANSACTION;
@@ -541,7 +542,7 @@ BEGIN
 				@pN_UsuarioID = @pN_UsuarioID,
 				@pC_Operacion = @pC_Operacion,
 				@pC_Comando = @pC_Comando,
-				@pN_OficinaID = @pN_OficinaID;
+				@pN_OficinaID = @pN_OficinaBitacoraID;
 
 			RAISERROR(@pC_Comando, 16, 1);
 			ROLLBACK TRANSACTION;
@@ -559,7 +560,7 @@ BEGIN
             @pN_UsuarioID = @pN_UsuarioID,
             @pC_Operacion = @pC_Operacion,
             @pC_Comando = @pC_Comando,
-            @pN_OficinaID = @pN_OficinaID;
+            @pN_OficinaID = @pN_OficinaBitacoraID;
 
         -- Insertar relaciones en GD.TGESTORDOCUMENTAL_Documento_Documento desde el JSON
         DECLARE @JSON NVARCHAR(MAX) = @pC_Doctos;
@@ -580,7 +581,7 @@ BEGIN
 					@pN_UsuarioID = @pN_UsuarioID,
 					@pC_Operacion = @pC_Operacion,
 					@pC_Comando = @pC_Comando,
-					@pN_OficinaID = @pN_OficinaID;
+					@pN_OficinaID = @pN_OficinaBitacoraID;
 
 				RAISERROR(@pC_Comando, 16, 1);
 				ROLLBACK TRANSACTION;
@@ -598,7 +599,7 @@ BEGIN
             @pN_UsuarioID = @pN_UsuarioID,
             @pC_Operacion = @pC_Operacion,
             @pC_Comando = @pC_Comando,
-            @pN_OficinaID = @pN_OficinaID;
+            @pN_OficinaID = @pN_OficinaBitacoraID;
 
         COMMIT TRANSACTION;
         RETURN 0; -- �xito
@@ -609,7 +610,7 @@ BEGIN
             @pN_UsuarioID = @pN_UsuarioID,
             @pC_Operacion = @pC_Operacion,
             @pC_Comando = @pC_Comando,
-            @pN_OficinaID = @pN_OficinaID;
+            @pN_OficinaID = @pN_OficinaBitacoraID;
 
         ROLLBACK TRANSACTION;
         RETURN 1;
@@ -633,6 +634,7 @@ CREATE OR ALTER PROCEDURE GD.PA_ActualizarDocumento
 	@pB_Activo BIT,
 	@pB_Descargable BIT,
     @pN_UsuarioID INT,  
+    @pN_OficinaBitacoraID INT,
     @pC_Doctos NVARCHAR(MAX)
 AS
 BEGIN
@@ -650,7 +652,7 @@ BEGIN
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
-                @pN_OficinaID = @pN_OficinaID;
+                @pN_OficinaID = @pN_OficinaBitacoraID;
 
             RAISERROR(@pC_Comando, 16, 1);
             ROLLBACK TRANSACTION;
@@ -665,7 +667,7 @@ BEGIN
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
-                @pN_OficinaID = @pN_OficinaID;
+                @pN_OficinaID = @pN_OficinaBitacoraID;
 
             RAISERROR(@pC_Comando, 16, 1);
             ROLLBACK TRANSACTION;
@@ -680,7 +682,7 @@ BEGIN
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
-                @pN_OficinaID = @pN_OficinaID;
+                @pN_OficinaID = @pN_OficinaBitacoraID;
 
             RAISERROR(@pC_Comando, 16, 1);
             ROLLBACK TRANSACTION;
@@ -695,7 +697,7 @@ BEGIN
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
-                @pN_OficinaID = @pN_OficinaID;
+                @pN_OficinaID = @pN_OficinaBitacoraID;
 
             RAISERROR(@pC_Comando, 16, 1);
             ROLLBACK TRANSACTION;
@@ -710,7 +712,7 @@ BEGIN
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
-                @pN_OficinaID = @pN_OficinaID;
+                @pN_OficinaID = @pN_OficinaBitacoraID;
 
             RAISERROR(@pC_Comando, 16, 1);
             ROLLBACK TRANSACTION;
@@ -725,7 +727,7 @@ BEGIN
 				@pN_UsuarioID = @pN_UsuarioID,
 				@pC_Operacion = @pC_Operacion,
 				@pC_Comando = @pC_Comando,
-				@pN_OficinaID = @pN_OficinaID;
+				@pN_OficinaID = @pN_OficinaBitacoraID;
 
 			RAISERROR(@pC_Comando, 16, 1);
 			ROLLBACK TRANSACTION;
@@ -740,7 +742,7 @@ BEGIN
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
-                @pN_OficinaID = @pN_OficinaID;
+                @pN_OficinaID = @pN_OficinaBitacoraID;
 
             RAISERROR(@pC_Comando, 16, 1);
             ROLLBACK TRANSACTION;
@@ -773,7 +775,7 @@ BEGIN
             @pN_UsuarioID = @pN_UsuarioID,
             @pC_Operacion = @pC_Operacion,
             @pC_Comando = @pC_Comando,
-            @pN_OficinaID = @pN_OficinaID;
+            @pN_OficinaID = @pN_OficinaBitacoraID;
 
         -- Insertar nuevas relaciones desde el JSON
         DECLARE @i INT = 0;
@@ -795,7 +797,7 @@ BEGIN
 					@pN_UsuarioID = @pN_UsuarioID,
 					@pC_Operacion = @pC_Operacion,
 					@pC_Comando = @pC_Comando,
-					@pN_OficinaID = @pN_OficinaID;
+					@pN_OficinaID = @pN_OficinaBitacoraID;
 
 				RAISERROR(@pC_Comando, 16, 1);
 				ROLLBACK TRANSACTION;
@@ -813,7 +815,7 @@ BEGIN
             @pN_UsuarioID = @pN_UsuarioID,
             @pC_Operacion = @pC_Operacion,
             @pC_Comando = @pC_Comando,
-            @pN_OficinaID = @pN_OficinaID;
+            @pN_OficinaID = @pN_OficinaBitacoraID;
 
         COMMIT TRANSACTION;
         RETURN 0;  -- Actualización exitosa
@@ -824,7 +826,7 @@ BEGIN
             @pN_UsuarioID = @pN_UsuarioID,
             @pC_Operacion = @pC_Operacion,
             @pC_Comando = @pC_Comando,
-            @pN_OficinaID = @pN_OficinaID;
+            @pN_OficinaID = @pN_OficinaBitacoraID;
 
         ROLLBACK TRANSACTION;
         RETURN 1;
