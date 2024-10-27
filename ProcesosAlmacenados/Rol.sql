@@ -99,6 +99,8 @@ BEGIN
         SET TB_Activo = 0
         WHERE TN_Id = @pN_Id;
 
+		delete from SC.TGESTORDOCUMENTAL_Permiso_Rol WHERE TN_RolID = @pN_Id
+
         COMMIT;
         RETURN 0;
     END TRY

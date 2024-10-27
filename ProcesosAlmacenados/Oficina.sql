@@ -93,7 +93,7 @@ BEGIN
         BEGIN TRANSACTION;
 
         -- Validar que la oficina exista y no esté ya eliminada
-        IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Oficina WHERE TN_Id = @pN_Id AND TB_Eliminado = 0)
+        IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Oficina WHERE TN_Id = @pN_Id AND TB_Eliminado = 0 AND TB_Gestor = 0)
         BEGIN
             ROLLBACK;
             RETURN 1; 
@@ -105,9 +105,20 @@ BEGIN
             RETURN 1;
         END
 
+		IF EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Oficina_Usuario WHERE TN_OficinaID = @pN_Id)
+        BEGIN
+            ROLLBACK;
+            RETURN 1;
+        END
+
         UPDATE SC.TGESTORDOCUMENTAL_Oficina
         SET TB_Eliminado = 1
         WHERE TN_Id = @pN_Id;
+
+		delete from SC.TGESTORDOCUMENTAL_Permiso_Oficina WHERE TN_OficinaID = @pN_Id
+		delete from SC.TGESTORDOCUMENTAL_Oficina_Gestor WHERE TN_OficinaID = @pN_Id
+
+
 
         COMMIT;
         RETURN 0; -- Eliminación exitosa

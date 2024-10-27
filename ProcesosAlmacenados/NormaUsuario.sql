@@ -9,7 +9,7 @@ BEGIN
         BEGIN TRANSACTION;
 
         -- Validar que la norma exista
-        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Norma WHERE TN_Id = @pN_NormaID)
+        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Norma WHERE TN_Id = @pN_NormaID AND TB_Eliminado = 0)
         BEGIN
             ROLLBACK;
             RETURN 1; -- Norma no encontrada

@@ -115,6 +115,8 @@ BEGIN
         SET TB_Eliminado = 1
         WHERE TN_Id = @pN_Id;
 
+		delete from SC.TGESTORDOCUMENTAL_Oficina_Usuario WHERE TN_UsuarioID = @pN_Id
+
         COMMIT;
         RETURN 0;
     END TRY
