@@ -1,8 +1,8 @@
 --USE GestorDocumentalOIJ
 
-CREATE PROCEDURE SC.PA_InsertarPermisoUsuario
+CREATE PROCEDURE SC.PA_InsertarPermisoOficina
     @pN_PermisoID INT,
-    @pN_UsuarioID INT
+    @pN_OficinaID INT
 AS
 BEGIN
     BEGIN TRY
@@ -16,15 +16,15 @@ BEGIN
         END
 
         -- Validar que el usuario exista
-        IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Usuario WHERE TN_Id = @pN_UsuarioID AND TB_Activo = 1)
+        IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Oficina WHERE TN_Id = @pN_OficinaID AND TB_Eliminado = 1)
         BEGIN
             ROLLBACK;
             RETURN 1; -- Usuario no encontrado
         END
 
         -- Insertar la relación entre permiso y usuario
-        INSERT INTO SC.TGESTORDOCUMENTAL_Permiso_Usuario (TN_PermisoID, TN_UsuarioID)
-        VALUES (@pN_PermisoID, @pN_UsuarioID);
+        INSERT INTO SC.TGESTORDOCUMENTAL_Permiso_Oficina (TN_PermisoID, TN_OficinaID)
+        VALUES (@pN_PermisoID, @pN_OficinaID);
 
         COMMIT;
         RETURN 0; -- Inserción exitosa
@@ -38,23 +38,23 @@ GO
 
 CREATE PROCEDURE SC.PA_EliminarPermisoUsuario
     @pN_PermisoID INT,
-    @pN_UsuarioID INT
+    @pN_OficinaID INT
 AS
 BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
         -- Validar que la relación entre permiso y usuario exista
-        IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Permiso_Usuario 
-                       WHERE TN_PermisoID = @pN_PermisoID AND TN_UsuarioID = @pN_UsuarioID)
+        IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Permiso_Oficina 
+                       WHERE TN_PermisoID = @pN_PermisoID AND TN_OficinaID = @pN_OficinaID)
         BEGIN
             ROLLBACK;
             RETURN 1; -- Relación no encontrada
         END
 
         -- Eliminar la relación entre permiso y usuario
-        DELETE FROM SC.TGESTORDOCUMENTAL_Permiso_Usuario 
-        WHERE TN_PermisoID = @pN_PermisoID AND TN_UsuarioID = @pN_UsuarioID;
+        DELETE FROM SC.TGESTORDOCUMENTAL_Permiso_Oficina
+        WHERE TN_PermisoID = @pN_PermisoID AND TN_OficinaID = @pN_OficinaID;
 
         COMMIT;
         RETURN 0; -- Eliminación exitosa
