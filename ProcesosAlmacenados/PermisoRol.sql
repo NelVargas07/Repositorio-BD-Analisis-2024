@@ -1,6 +1,6 @@
 --USE GestorDocumentalOIJ
 
-CREATE PROCEDURE SC.SP_InsertarPermisoRol
+CREATE PROCEDURE SC.PA_InsertarPermisoRol
     @pN_PermisoID INT,
     @pN_RolID INT
 AS
@@ -35,7 +35,7 @@ BEGIN
     END CATCH
 END;
 
-CREATE PROCEDURE SC.SP_EliminarPermisoRol
+CREATE PROCEDURE SC.PA_EliminarPermisoRol
     @pN_PermisoID INT,
     @pN_RolID INT
 AS
