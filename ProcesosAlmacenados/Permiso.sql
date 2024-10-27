@@ -115,7 +115,7 @@ CREATE PROCEDURE SC.PA_ListarPermisos
 AS
 BEGIN
 
-    SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Activo
+    SELECT TN_Id as Id, TC_Nombre as Nombre, TC_Descripcion as Descripcion, TB_Activo as Activo
     FROM SC.TGESTORDOCUMENTAL_Permiso
     WHERE TB_Activo = 1;
 END;
@@ -125,7 +125,7 @@ CREATE PROCEDURE SC.PA_ListarPermisoPorID
     @pN_Id INT
 AS
 BEGIN
-    SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Activo
+    SELECT TN_Id as Id, TC_Nombre as Nombre, TC_Descripcion as Descripcion, TB_Activo as Activo
     FROM SC.TGESTORDOCUMENTAL_Permiso
     WHERE TN_Id = @pN_Id AND TB_Activo = 1;
 END;

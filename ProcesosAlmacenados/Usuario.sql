@@ -143,14 +143,10 @@ CREATE OR ALTER PROCEDURE SC.PA_ListarUsuarioPorId
     @pN_Id INT
 AS
 BEGIN
-    BEGIN TRY
-        BEGIN TRANSACTION;
-
         -- Validar que el usuario exista y est� activo
         IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Usuario WHERE TN_Id = @pN_Id AND TB_Eliminado = 0)
         BEGIN
-            ROLLBACK;
-            RETURN 1; 
+            RETURN ; 
         END
 
         -- Seleccionar el usuario
@@ -158,13 +154,6 @@ BEGIN
         FROM SC.TGESTORDOCUMENTAL_Usuario
         WHERE TN_Id = @pN_Id AND TB_Eliminado = 0;
 
-        COMMIT;
-        RETURN 0;
-    END TRY
-    BEGIN CATCH
-        ROLLBACK;
-        RETURN 1;
-    END CATCH
 END;
 GO
 

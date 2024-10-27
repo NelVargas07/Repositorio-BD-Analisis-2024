@@ -116,7 +116,7 @@ CREATE PROCEDURE SC.PA_ListarRoles
 AS
 BEGIN
         -- Seleccionar todos los roles activos
-        SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Activo
+        SELECT TN_Id as Id, TC_Nombre as Nombre, TC_Descripcion as Descripcion, TB_Activo as Activo
         FROM SC.TGESTORDOCUMENTAL_Rol
         WHERE TB_Activo = 1;
 END;
@@ -126,27 +126,15 @@ CREATE PROCEDURE SC.PA_ListarRolPorId
     @pN_Id INT
 AS
 BEGIN
-    BEGIN TRY
-        BEGIN TRANSACTION;
-
         -- Validar que el rol especificado exista y est� activo
         IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Rol WHERE TN_Id = @pN_Id AND TB_Activo = 1)
         BEGIN
-            ROLLBACK;
-            RETURN 1; 
+            RETURN ; 
         END
 
         -- Seleccionar el rol por ID
-        SELECT TN_Id, TC_Nombre, TC_Descripcion, TB_Activo
+        SELECT TN_Id as Id, TC_Nombre as Nombre, TC_Descripcion as Descripcion, TB_Activo as Activo
         FROM SC.TGESTORDOCUMENTAL_Rol
         WHERE TN_Id = @pN_Id AND TB_Activo = 1;
-
-        COMMIT;
-        RETURN 0;
-    END TRY
-    BEGIN CATCH
-        ROLLBACK;
-        RETURN 1;
-    END CATCH
 END;
 GO

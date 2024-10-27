@@ -135,7 +135,7 @@ GO
 CREATE PROCEDURE SC.PA_ListarOficinas
 AS
 BEGIN
-    SELECT TN_Id, TC_Nombre, TC_CodigoOficina, TB_Gestor
+    SELECT TN_Id as Id, TC_Nombre as Nombre, TC_CodigoOficina as CodigoOficina, TB_Gestor as Gestor, TB_Eliminado as Eliminado 
     FROM SC.TGESTORDOCUMENTAL_Oficina
     WHERE TB_Eliminado = 0;
 END;
@@ -144,7 +144,7 @@ GO
 CREATE PROCEDURE SC.PA_ListarOficinasGestor
 AS
 BEGIN
-    SELECT TN_Id, TC_Nombre, TC_CodigoOficina, TB_Gestor
+    SELECT TN_Id as Id, TC_Nombre as Nombre, TC_CodigoOficina as CodigoOficina, TB_Gestor as Gestor, TB_Eliminado as Eliminado 
     FROM SC.TGESTORDOCUMENTAL_Oficina
     WHERE TB_Eliminado = 0 AND TB_Gestor = 1;
 END;
@@ -154,26 +154,14 @@ CREATE PROCEDURE SC.PA_ListarOficinaPorID
     @pN_Id INT
 AS
 BEGIN
-	BEGIN TRY
-        BEGIN TRANSACTION;
-
         -- Validar que el usuario exista y est� activo
         IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Oficina WHERE TN_Id = @pN_Id AND TB_Eliminado = 0)
         BEGIN
-            ROLLBACK;
-            RETURN 1; 
+            RETURN ; 
         END
 
-        SELECT TN_Id, TC_Nombre, TC_CodigoOficina, TB_Gestor
+        SELECT TN_Id as Id, TC_Nombre as Nombre, TC_CodigoOficina as CodigoOficina, TB_Gestor as Gestor, TB_Eliminado as Eliminado 
 		FROM SC.TGESTORDOCUMENTAL_Oficina
 		WHERE TN_Id = @pN_Id AND TB_Eliminado = 0;
-
-        COMMIT;
-        RETURN 0;
-    END TRY
-    BEGIN CATCH
-        ROLLBACK;
-        RETURN 1;
-    END CATCH
 END;
 GO
