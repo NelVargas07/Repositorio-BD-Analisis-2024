@@ -34,6 +34,7 @@ BEGIN
         RETURN 1; -- Error en la ejecución
     END CATCH
 END;
+GO
 
 CREATE PROCEDURE SC.PA_EliminarPermisoUsuario
     @pN_PermisoID INT,
@@ -63,3 +64,4 @@ BEGIN
         RETURN 1; -- Error en la ejecución
     END CATCH
 END;
+GO

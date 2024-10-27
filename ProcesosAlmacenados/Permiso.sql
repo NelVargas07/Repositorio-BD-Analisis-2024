@@ -27,6 +27,7 @@ BEGIN
         RETURN 1; 
     END CATCH
 END;
+GO
 
 CREATE PROCEDURE SC.PA_ActualizarPermiso
     @pN_Id INT,
@@ -58,13 +59,14 @@ BEGIN
         WHERE TN_Id = @pN_Id;
 
         COMMIT;
-        RETURN 0; -- Actualización exitosa
+        RETURN 0; -- Actualizaciï¿½n exitosa
     END TRY
     BEGIN CATCH
         ROLLBACK;
-        RETURN 1; -- Error en la ejecución
+        RETURN 1; -- Error en la ejecuciï¿½n
     END CATCH
 END;
+GO
 
 CREATE PROCEDURE SC.PA_EliminarPermiso
     @pN_Id INT
@@ -75,24 +77,24 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- Validar que el permiso exista y no esté ya eliminado
+        -- Validar que el permiso exista y no estï¿½ ya eliminado
         IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Permiso WHERE TN_Id = @pN_Id AND TB_Activo = 1)
         BEGIN
             ROLLBACK;
             RETURN 1; -- Permiso no encontrado o ya eliminado
         END
 
-		--IF EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Usuario WHERE TN_RolID = @pN_Id AND TB_Eliminado = 0)
-  --      BEGIN
-  --          ROLLBACK;
-  --          RETURN 1; 
-  --      END
+		IF EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Permiso_Oficina WHERE TN_PermisoID = @pN_Id)
+        BEGIN
+            ROLLBACK;
+            RETURN 1; 
+        END
 
-		--IF EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Usuario WHERE TN_RolID = @pN_Id AND TB_Eliminado = 0)
-  --      BEGIN
-  --          ROLLBACK;
-  --          RETURN 1; 
-  --      END
+		IF EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Permiso_Rol WHERE TN_PermisoID = @pN_Id)
+        BEGIN
+            ROLLBACK;
+            RETURN 1; 
+        END
 
         -- Eliminar el permiso (soft delete)
         UPDATE SC.TGESTORDOCUMENTAL_Permiso
@@ -100,14 +102,14 @@ BEGIN
         WHERE TN_Id = @pN_Id;
 
         COMMIT;
-        RETURN 0; -- Eliminación exitosa
+        RETURN 0; -- Eliminaciï¿½n exitosa
     END TRY
     BEGIN CATCH
         ROLLBACK;
-        RETURN 1; -- Error en la ejecución
+        RETURN 1; -- Error en la ejecuciï¿½n
     END CATCH
 END;
-
+GO
 
 CREATE PROCEDURE SC.PA_ListarPermisos
 AS
@@ -117,6 +119,7 @@ BEGIN
     FROM SC.TGESTORDOCUMENTAL_Permiso
     WHERE TB_Activo = 1;
 END;
+GO
 
 CREATE PROCEDURE SC.PA_ListarPermisoPorID
     @pN_Id INT
@@ -126,3 +129,4 @@ BEGIN
     FROM SC.TGESTORDOCUMENTAL_Permiso
     WHERE TN_Id = @pN_Id AND TB_Activo = 1;
 END;
+GO

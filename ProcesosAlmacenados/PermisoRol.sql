@@ -34,6 +34,7 @@ BEGIN
         RETURN 1; -- Error en la ejecución
     END CATCH
 END;
+GO
 
 CREATE PROCEDURE SC.PA_EliminarPermisoRol
     @pN_PermisoID INT,
@@ -55,7 +56,7 @@ BEGIN
 
         -- Eliminar la relación entre permiso y usuario
         DELETE FROM SC.TGESTORDOCUMENTAL_Permiso_Rol 
-        WHERE TN_PermisoID = @pN_PermisoID AND TN_Rol = @pN_RolID;
+        WHERE TN_PermisoID = @pN_PermisoID AND TN_RolID = @pN_RolID;
 
         COMMIT;
         RETURN 0; -- Eliminación exitosa
@@ -65,3 +66,4 @@ BEGIN
         RETURN 1; -- Error en la ejecución
     END CATCH
 END;
+GO

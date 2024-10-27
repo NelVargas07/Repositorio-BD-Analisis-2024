@@ -34,6 +34,7 @@ BEGIN
         RETURN 1; 
     END CATCH
 END;
+GO
 
 CREATE PROCEDURE SC.PA_ActualizarOficina
     @pN_Id INT,
@@ -75,13 +76,14 @@ BEGIN
         WHERE TN_Id = @pN_Id;
 
         COMMIT;
-        RETURN 0; -- Actualización exitosa
+        RETURN 0; -- Actualizaciï¿½n exitosa
     END TRY
     BEGIN CATCH
         ROLLBACK;
-        RETURN 1; -- Error en la ejecución
+        RETURN 1; -- Error en la ejecuciï¿½n
     END CATCH
 END;
+GO
 
 CREATE PROCEDURE SC.PA_EliminarOficina
     @pN_Id INT
@@ -92,7 +94,7 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- Validar que la oficina exista y no esté ya eliminada
+        -- Validar que la oficina exista y no estï¿½ ya eliminada
         IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Oficina WHERE TN_Id = @pN_Id AND TB_Eliminado = 0 AND TB_Gestor = 0)
         BEGIN
             ROLLBACK;
@@ -121,14 +123,14 @@ BEGIN
 
 
         COMMIT;
-        RETURN 0; -- Eliminación exitosa
+        RETURN 0; -- Eliminaciï¿½n exitosa
     END TRY
     BEGIN CATCH
         ROLLBACK;
-        RETURN 1; -- Error en la ejecución
+        RETURN 1; -- Error en la ejecuciï¿½n
     END CATCH
 END;
-
+GO
 
 CREATE PROCEDURE SC.PA_ListarOficinas
 AS
@@ -137,6 +139,7 @@ BEGIN
     FROM SC.TGESTORDOCUMENTAL_Oficina
     WHERE TB_Eliminado = 0;
 END;
+GO
 
 CREATE PROCEDURE SC.PA_ListarOficinasGestor
 AS
@@ -145,6 +148,7 @@ BEGIN
     FROM SC.TGESTORDOCUMENTAL_Oficina
     WHERE TB_Eliminado = 0 AND TB_Gestor = 1;
 END;
+GO
 
 CREATE PROCEDURE SC.PA_ListarOficinaPorID
     @pN_Id INT
@@ -153,7 +157,7 @@ BEGIN
 	BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- Validar que el usuario exista y esté activo
+        -- Validar que el usuario exista y estï¿½ activo
         IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Oficina WHERE TN_Id = @pN_Id AND TB_Eliminado = 0)
         BEGIN
             ROLLBACK;
@@ -172,3 +176,4 @@ BEGIN
         RETURN 1;
     END CATCH
 END;
+GO

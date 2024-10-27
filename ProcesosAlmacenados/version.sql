@@ -199,6 +199,7 @@ CREATE PROCEDURE GD.PA_InsertarVersion
     @pN_UsuarioID INT,
     @pB_DocDinamico BIT,
     @pB_Obsoleto BIT,
+    @pN_UsuarioBitacoraID INT,
     @pN_OficinaID INT   
 AS
 BEGIN
@@ -217,7 +218,7 @@ BEGIN
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
-                @pN_OficinaID = @pN_OficinaID;
+                @pN_OficinaID = @pN_UsuarioBitacoraID;
 
             RAISERROR(@pC_Comando, 16, 1);
             ROLLBACK TRANSACTION;
@@ -231,7 +232,7 @@ BEGIN
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
-                @pN_OficinaID = @pN_OficinaID;
+                @pN_OficinaID = @pN_UsuarioBitacoraID;
 
             RAISERROR(@pC_Comando, 16, 1);
             ROLLBACK TRANSACTION;
@@ -245,7 +246,7 @@ BEGIN
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
-                @pN_OficinaID = @pN_OficinaID;
+                @pN_OficinaID = @pN_UsuarioBitacoraID;
 
             RAISERROR(@pC_Comando, 16, 1);
             ROLLBACK TRANSACTION;
@@ -265,7 +266,7 @@ BEGIN
             @pN_UsuarioID = @pN_UsuarioID,
             @pC_Operacion = @pC_Operacion,
             @pC_Comando = @pC_Comando,
-            @pN_OficinaID = @pN_OficinaID;
+            @pN_OficinaID = @pN_UsuarioBitacoraID;
 
         COMMIT TRANSACTION;
         RETURN 0; -- Inserción exitosa
@@ -276,7 +277,7 @@ BEGIN
             @pN_UsuarioID = @pN_UsuarioID,
             @pC_Operacion = @pC_Operacion,
             @pC_Comando = @pC_Comando,
-            @pN_OficinaID = @pN_OficinaID;
+            @pN_OficinaID = @pN_UsuarioBitacoraID;
 
         ROLLBACK TRANSACTION;
         RETURN 1;
@@ -294,6 +295,7 @@ CREATE PROCEDURE GD.PA_ActualizarVersion
     @pN_UsuarioID INT = NULL,
     @pB_DocDinamico BIT,
     @pB_Obsoleto BIT,
+    @pN_UsuarioBitacoraID INT,
     @pN_OficinaID INT
 AS
 BEGIN
@@ -311,7 +313,7 @@ BEGIN
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
-                @pN_OficinaID = @pN_OficinaID;
+                @pN_OficinaID = @pN_UsuarioBitacoraID;
 
             RAISERROR(@pC_Comando, 16, 1);
             ROLLBACK TRANSACTION;
@@ -328,7 +330,7 @@ BEGIN
                     @pN_UsuarioID = @pN_UsuarioID,
                     @pC_Operacion = @pC_Operacion,
                     @pC_Comando = @pC_Comando,
-                    @pN_OficinaID = @pN_OficinaID;
+                    @pN_OficinaID = @pN_UsuarioBitacoraID;
 
                 RAISERROR(@pC_Comando, 16, 1);
                 ROLLBACK TRANSACTION;
@@ -356,7 +358,7 @@ BEGIN
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
-                @pN_OficinaID = @pN_OficinaID;
+                @pN_OficinaID = @pN_UsuarioBitacoraID;
 
         COMMIT TRANSACTION;
         RETURN 0; -- Actualización exitosa
@@ -367,7 +369,7 @@ BEGIN
             @pN_UsuarioID = @pN_UsuarioID,
             @pC_Operacion = @pC_Operacion,
             @pC_Comando = @pC_Comando,
-            @pN_OficinaID = @pN_OficinaID;
+            @pN_OficinaID = @pN_UsuarioBitacoraID;
 
         ROLLBACK TRANSACTION;
         RETURN 1;

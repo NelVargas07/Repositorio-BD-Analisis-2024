@@ -71,6 +71,7 @@ BEGIN
         RETURN 1;
     END CATCH
 END;
+GO
 
 CREATE PROCEDURE SC.PA_EliminarRol
     @pN_Id INT
@@ -109,6 +110,7 @@ BEGIN
         RETURN 1;
     END CATCH
 END;
+GO
 
 CREATE PROCEDURE SC.PA_ListarRoles
 AS
@@ -118,6 +120,7 @@ BEGIN
         FROM SC.TGESTORDOCUMENTAL_Rol
         WHERE TB_Activo = 1;
 END;
+GO
 
 CREATE PROCEDURE SC.PA_ListarRolPorId
     @pN_Id INT
@@ -146,3 +149,4 @@ BEGIN
         RETURN 1;
     END CATCH
 END;
+GO

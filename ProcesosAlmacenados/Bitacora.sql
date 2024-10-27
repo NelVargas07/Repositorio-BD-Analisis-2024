@@ -9,10 +9,10 @@ CREATE PROCEDURE GD.PA_InsertarBitacora
 AS
 BEGIN
     BEGIN TRY
-        -- Iniciar la transacción
+        -- Iniciar la transacciï¿½n
         BEGIN TRANSACTION;
 
-        -- Validar que el usuario exista, esté activo y no esté eliminado
+        -- Validar que el usuario exista, estï¿½ activo y no estï¿½ eliminado
         IF NOT EXISTS (
             SELECT 1 
             FROM SC.TGESTORDOCUMENTAL_Usuario 
@@ -21,12 +21,12 @@ BEGIN
             AND TB_Eliminado = 0
         )
         BEGIN
-            -- Usuario no válido o inactivo
+            -- Usuario no vï¿½lido o inactivo
             ROLLBACK TRANSACTION;
-            RETURN 1; -- Retornar 1 si falla la validación
+            RETURN 1; -- Retornar 1 si falla la validaciï¿½n
         END
 
-        -- Validar que la oficina exista y no esté eliminada
+        -- Validar que la oficina exista y no estï¿½ eliminada
         IF NOT EXISTS (
             SELECT 1 
             FROM SC.TGESTORDOCUMENTAL_Oficina 
@@ -34,36 +34,35 @@ BEGIN
             AND TB_Eliminado = 0
         )
         BEGIN
-            -- Oficina no válida o eliminada
+            -- Oficina no vï¿½lida o eliminada
             ROLLBACK TRANSACTION;
-            RETURN 1; -- Retornar 1 si falla la validación
+            RETURN 1; -- Retornar 1 si falla la validaciï¿½n
         END
 
-        -- Validar que la oficina esté ligada al usuario y no esté eliminada
+        -- Validar que la oficina estï¿½ ligada al usuario y no estï¿½ eliminada
         IF NOT EXISTS (
             SELECT 1 
             FROM SC.TGESTORDOCUMENTAL_Oficina_Usuario 
             WHERE TN_UsuarioID = @pN_UsuarioID 
             AND TN_OficinaID = @pN_OficinaID
-            AND TB_Eliminado = 0
         )
         BEGIN
-            -- No hay relación válida entre la oficina y el usuario
+            -- No hay relaciï¿½n vï¿½lida entre la oficina y el usuario
             ROLLBACK TRANSACTION;
-            RETURN 1; -- Retornar 1 si falla la validación
+            RETURN 1; -- Retornar 1 si falla la validaciï¿½n
         END
 
-        -- Insertar en la tabla de bitácora
+        -- Insertar en la tabla de bitï¿½cora
         INSERT INTO GD.TGESTORDOCUMENTAL_Bitacora 
         (TC_Operacion, TN_UsuarioID, TC_Comando, TN_OficinaID, TF_FechaHora)
         VALUES (@pC_Operacion, @pN_UsuarioID, @pC_Comando, @pN_OficinaID, DEFAULT);
 
-        -- Confirmar la transacción
+        -- Confirmar la transacciï¿½n
         COMMIT TRANSACTION;
-        RETURN 0; -- Retornar 0 si la inserción fue exitosa
+        RETURN 0; -- Retornar 0 si la inserciï¿½n fue exitosa
     END TRY
     BEGIN CATCH
-        -- Si ocurre algún error, deshacer la transacción
+        -- Si ocurre algï¿½n error, deshacer la transacciï¿½n
         ROLLBACK TRANSACTION;
         RETURN 1; -- Retornar 1 si hay un error
     END CATCH

@@ -366,7 +366,7 @@ END;
 GO
 
 
-CREATE PROCEDURE GD.PA_InsertarEtapa
+CREATE OR ALTER PROCEDURE GD.PA_InsertarEtapa
     @pC_Nombre NVARCHAR(255),
     @pC_Descripcion NVARCHAR(500),
     @pN_EtapaPadreID INT = NULL,
@@ -431,7 +431,7 @@ BEGIN
         IF @pN_EtapaPadreID IS NOT NULL
         BEGIN
             EXEC GD.PA_InsertarEtapa_Etapa @pN_EtapaPadreID, @NewId
-			SET @pC_Comando = 'Agregacion de la relacion etapa padre con la etapa con Id '+ CAST(@pN_Id AS NVARCHAR(10));
+			SET @pC_Comando = 'Agregacion de la relacion etapa padre con la etapa con Id '+ CAST(@NewId AS NVARCHAR(10));
 				EXEC GD.PA_InsertarBitacora 
 					@pN_UsuarioID = @pN_UsuarioID,
 					@pC_Operacion = @pC_Operacion,

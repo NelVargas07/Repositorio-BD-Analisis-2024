@@ -34,6 +34,7 @@ BEGIN
         RETURN 1; 
     END CATCH
 END;
+GO
 
 CREATE PROCEDURE GD.PA_EliminarNormaUsuario
     @pN_NormaID INT,
@@ -63,3 +64,4 @@ BEGIN
         RETURN 1; 
     END CATCH
 END;
+GO
