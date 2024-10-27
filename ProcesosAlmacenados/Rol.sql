@@ -49,11 +49,11 @@ BEGIN
             RETURN 1; -- Indica que el ID no existe
         END
 
-        -- Validar que el nombre no esté en uso por otro rol activo
+        -- Validar que el nombre no estï¿½ en uso por otro rol activo
         IF EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Rol WHERE TC_Nombre = @pC_Nombre AND TN_Id <> @pN_Id AND TB_Activo = 1)
         BEGIN
             ROLLBACK;
-            RETURN 1; -- Indica que el nombre ya está en uso por otro rol
+            RETURN 1; -- Indica que el nombre ya estï¿½ en uso por otro rol
         END
 
         -- Actualizar el rol
@@ -88,7 +88,7 @@ BEGIN
             RETURN 1; -- Indica que el ID del rol no existe
         END
 
-        -- Validar que el rol no esté asignado a ningún usuario
+        -- Validar que el rol no estï¿½ asignado a ningï¿½n usuario
         IF EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Usuario WHERE TN_RolID = @pN_Id AND TB_Eliminado = 0)
         BEGIN
             ROLLBACK;
@@ -110,7 +110,7 @@ BEGIN
     END CATCH
 END;
 
-CREATE PROCEDURE SC.SP_ListarRoles
+CREATE PROCEDURE SC.PA_ListarRoles
 AS
 BEGIN
         -- Seleccionar todos los roles activos
@@ -119,14 +119,14 @@ BEGIN
         WHERE TB_Activo = 1;
 END;
 
-CREATE PROCEDURE SC.SP_ListarRolPorId
+CREATE PROCEDURE SC.PA_ListarRolPorId
     @pN_Id INT
 AS
 BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- Validar que el rol especificado exista y esté activo
+        -- Validar que el rol especificado exista y estï¿½ activo
         IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Rol WHERE TN_Id = @pN_Id AND TB_Activo = 1)
         BEGIN
             ROLLBACK;
