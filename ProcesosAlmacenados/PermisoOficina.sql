@@ -36,7 +36,7 @@ BEGIN
 END;
 GO
 
-CREATE PROCEDURE SC.PA_EliminarPermisoUsuario
+CREATE PROCEDURE SC.PA_EliminarPermisoOficina
     @pN_PermisoID INT,
     @pN_OficinaID INT
 AS
