@@ -211,45 +211,39 @@ BEGIN
     BEGIN TRY
 	 
         -- Validar que el documento y el usuario existan
-        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Documento WHERE TN_Id = @pN_DocumentoID)
+        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Documento WHERE TN_Id = @pN_DocumentoID AND TB_Eliminado = 0)
         BEGIN
+            ROLLBACK TRANSACTION;
             SET @pC_Comando = 'El documento con el Id '+ CAST(@pN_DocumentoID AS NVARCHAR(10)) +' no existe.';
             EXEC GD.PA_InsertarBitacora 
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
                 @pN_OficinaID = @pN_UsuarioBitacoraID;
-
-            RAISERROR(@pC_Comando, 16, 1);
-            ROLLBACK TRANSACTION;
             RETURN 1;
         END
 
-		IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Usuario WHERE TN_Id = @pN_UsuarioID)
+		IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Usuario WHERE TN_Id = @pN_UsuarioID AND TB_Activo = 1)
         BEGIN
+            ROLLBACK TRANSACTION;
             SET @pC_Comando = 'El usuario con el Id '+ CAST(@pN_UsuarioID AS NVARCHAR(10)) +' no existe.';
             EXEC GD.PA_InsertarBitacora 
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
                 @pN_OficinaID = @pN_UsuarioBitacoraID;
-
-            RAISERROR(@pC_Comando, 16, 1);
-            ROLLBACK TRANSACTION;
             RETURN 1;
         END
 
-		IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Oficina WHERE TN_Id = @pN_OficinaID)
+		IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Oficina WHERE TN_Id = @pN_OficinaID AND TB_Eliminado = 0)
         BEGIN
+            ROLLBACK TRANSACTION;
             SET @pC_Comando = 'La oficina con el Id '+ CAST(@pN_DocumentoID AS NVARCHAR(10)) +' no existe.';
             EXEC GD.PA_InsertarBitacora 
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
                 @pN_OficinaID = @pN_UsuarioBitacoraID;
-
-            RAISERROR(@pC_Comando, 16, 1);
-            ROLLBACK TRANSACTION;
             RETURN 1;
         END
 
@@ -261,7 +255,7 @@ BEGIN
 
 		DECLARE @TN_VersionID INT = SCOPE_IDENTITY();
 
-		SET @pC_Comando = 'Insertar nueva version: ' + @TN_VersionID;
+		SET @pC_Comando = 'Insertar nueva version: ' + CAST(@TN_VersionID AS NVARCHAR(10));
         EXEC GD.PA_InsertarBitacora 
             @pN_UsuarioID = @pN_UsuarioID,
             @pC_Operacion = @pC_Operacion,
@@ -272,15 +266,13 @@ BEGIN
         RETURN 0; -- Inserción exitosa
     END TRY
     BEGIN CATCH
+        ROLLBACK TRANSACTION;
         SET @pC_Comando = ERROR_MESSAGE();
         EXEC GD.PA_InsertarBitacora 
             @pN_UsuarioID = @pN_UsuarioID,
             @pC_Operacion = @pC_Operacion,
             @pC_Comando = @pC_Comando,
             @pN_OficinaID = @pN_UsuarioBitacoraID;
-
-        ROLLBACK TRANSACTION;
-        RETURN 1;
     END CATCH
 END;
 GO
@@ -308,32 +300,28 @@ BEGIN
         -- Validar que la versión exista
         IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Version WHERE TN_Id = @pN_Id)
         BEGIN
+            ROLLBACK TRANSACTION;
             SET @pC_Comando = 'La version con el Id '+ CAST(@pN_Id AS NVARCHAR(10)) +' no existe.';
             EXEC GD.PA_InsertarBitacora 
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
                 @pN_OficinaID = @pN_UsuarioBitacoraID;
-
-            RAISERROR(@pC_Comando, 16, 1);
-            ROLLBACK TRANSACTION;
             RETURN 1;
         END
 
 		-- Validar que la norma exista o si viene nula
         IF @pN_UsuarioID IS NOT NULL
         BEGIN
-            IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Usuario WHERE TN_Id = @pN_UsuarioID)
+            IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Usuario WHERE TN_Id = @pN_UsuarioID and TB_Activo = 1)
             BEGIN
+                ROLLBACK TRANSACTION;
                 SET @pC_Comando = 'El usuario con el Id '+ CAST(@pN_UsuarioID AS NVARCHAR(10)) +' no existe.';
                 EXEC GD.PA_InsertarBitacora 
                     @pN_UsuarioID = @pN_UsuarioID,
                     @pC_Operacion = @pC_Operacion,
                     @pC_Comando = @pC_Comando,
                     @pN_OficinaID = @pN_UsuarioBitacoraID;
-
-                RAISERROR(@pC_Comando, 16, 1);
-                ROLLBACK TRANSACTION;
                 RETURN 1;
             END
         END
@@ -364,14 +352,13 @@ BEGIN
         RETURN 0; -- Actualización exitosa
     END TRY
     BEGIN CATCH
+        ROLLBACK TRANSACTION;
         SET @pC_Comando = ERROR_MESSAGE();
         EXEC GD.PA_InsertarBitacora 
             @pN_UsuarioID = @pN_UsuarioID,
             @pC_Operacion = @pC_Operacion,
             @pC_Comando = @pC_Comando,
             @pN_OficinaID = @pN_UsuarioBitacoraID;
-
-        ROLLBACK TRANSACTION;
         RETURN 1;
     END CATCH
 END;
@@ -393,15 +380,13 @@ BEGIN
         -- Validar que la versión exista
         IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Version WHERE TN_Id = @pN_Id)
         BEGIN
+            ROLLBACK TRANSACTION;
             SET @pC_Comando = 'La version con el Id '+ + CAST(@pN_Id AS NVARCHAR(10)) +' no existe.';
             EXEC GD.PA_InsertarBitacora 
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
                 @pN_OficinaID = @pN_OficinaID;
-
-            RAISERROR(@pC_Comando, 16, 1);
-            ROLLBACK TRANSACTION;
             RETURN 1;
         END
 
@@ -421,14 +406,13 @@ BEGIN
         RETURN 0; -- Eliminación exitosa
     END TRY
     BEGIN CATCH
+        ROLLBACK TRANSACTION;
         SET @pC_Comando = ERROR_MESSAGE();
         EXEC GD.PA_InsertarBitacora 
             @pN_UsuarioID = @pN_UsuarioID,
             @pC_Operacion = @pC_Operacion,
             @pC_Comando = @pC_Comando,
             @pN_OficinaID = @pN_OficinaID;
-
-        ROLLBACK TRANSACTION;
         RETURN 1;
     END CATCH
 END;

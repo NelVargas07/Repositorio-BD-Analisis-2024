@@ -65,3 +65,13 @@ BEGIN
     END CATCH
 END;
 GO
+
+CREATE PROCEDURE SC.PA_ListarPermisoOficina
+AS
+BEGIN
+    SELECT
+	TN_PermisoID AS PermisoID,
+	TN_OficinaID AS OficinaID	
+	FROM SC.TGESTORDOCUMENTAL_Permiso_Oficina
+	ORDER BY TN_PermisoID DESC
+END

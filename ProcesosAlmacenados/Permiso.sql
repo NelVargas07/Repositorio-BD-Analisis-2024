@@ -39,7 +39,7 @@ BEGIN
         BEGIN TRANSACTION;
 
         -- Validar que el permiso exista
-        IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Permiso WHERE TN_Id = @pN_Id AND TB_Activo = 1)
+        IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Permiso WHERE TN_Id = @pN_Id )
         BEGIN
             ROLLBACK;
             RETURN 1; 
@@ -72,8 +72,6 @@ CREATE PROCEDURE SC.PA_EliminarPermiso
     @pN_Id INT
 AS
 BEGIN
-    SET NOCOUNT ON;
-
     BEGIN TRY
         BEGIN TRANSACTION;
 

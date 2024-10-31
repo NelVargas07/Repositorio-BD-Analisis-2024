@@ -1,5 +1,5 @@
 -- Procedimiento para insertar en GD.TGESTORDOCUMENTAL_Etapa_Etapa
-CREATE PROCEDURE GD.PA_InsertarEtapa_Etapa
+CREATE OR ALTER PROCEDURE GD.PA_InsertarEtapa_Etapa
     @pN_EtapaPadreID INT,
     @pN_EtapaID INT
 AS
@@ -8,17 +8,15 @@ BEGIN
         BEGIN TRANSACTION;
 
         -- Validar que la etapa padre exista
-        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Etapa WHERE TN_ID = @pN_EtapaPadreID)
+        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Etapa WHERE TN_ID = @pN_EtapaPadreID AND TB_Eliminado = 0)
         BEGIN
-            RAISERROR('La etapa padre con el Id especificado no existe.', 16, 1);
             ROLLBACK TRANSACTION;
             RETURN 1;
         END
 
         -- Validar que la etapa hija exista
-        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Etapa WHERE TN_ID = @pN_EtapaID)
+        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Etapa WHERE TN_ID = @pN_EtapaID AND TB_Eliminado = 0)
         BEGIN
-            RAISERROR('La etapa con el Id especificado no existe.', 16, 1);
             ROLLBACK TRANSACTION;
             RETURN 1;
         END
@@ -50,7 +48,6 @@ BEGIN
         -- Validar que la relación exista
         IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Etapa_Etapa WHERE TN_EtapaPadreID = @pN_EtapaPadreID AND TN_EtapaID = @pN_EtapaID)
         BEGIN
-            RAISERROR('La relación entre etapas especificada no existe.', 16, 1);
             ROLLBACK TRANSACTION;
             RETURN 1;
         END
@@ -79,7 +76,6 @@ BEGIN
         -- Validar que la relación exista
         IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Etapa_Etapa WHERE TN_EtapaPadreID = @pN_EtapaPadreID AND TN_EtapaID = @pN_EtapaID)
         BEGIN
-            RAISERROR('La relación entre etapas especificada no existe.', 16, 1);
             ROLLBACK TRANSACTION;
             RETURN 1;
         END

@@ -1,7 +1,7 @@
 --USE GESTORDOCUMENTALOIJ
 
 -- Procedimiento para insertar en GD.TGESTORDOCUMENTAL_Clasificacion
-CREATE PROCEDURE GD.PA_InsertarClasificacion
+CREATE OR ALTER PROCEDURE GD.PA_InsertarClasificacion
     @pC_Nombre NVARCHAR(255),
     @pC_Descripcion NVARCHAR(500),
     @pN_UsuarioID INT, -- ID del usuario
@@ -18,15 +18,13 @@ BEGIN
         -- Validar que no exista una clasificacion con el mismo nombre
         IF EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Clasificacion WHERE TC_Nombre = @pC_Nombre)
         BEGIN
+			ROLLBACK TRANSACTION;
             SET @pC_Comando = 'Ya existe una clasificacion con el mismo nombre ' + @pC_Nombre;
             EXEC GD.PA_InsertarBitacora 
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
                 @pN_OficinaID = @pN_OficinaID;
-
-            RAISERROR(@pC_Comando, 16, 1);
-            ROLLBACK TRANSACTION;
             RETURN 1;
         END
 
@@ -46,18 +44,20 @@ BEGIN
 
     END TRY
     BEGIN CATCH
+		ROLLBACK TRANSACTION;
         SET @pC_Comando = ERROR_MESSAGE();
         EXEC GD.PA_InsertarBitacora 
             @pN_UsuarioID = @pN_UsuarioID,
             @pC_Operacion = @pC_Operacion,
             @pC_Comando = @pC_Comando,
             @pN_OficinaID = @pN_OficinaID;
+		RETURN 1;
     END CATCH
 END;
 GO
 
 -- Procedimiento para actualizar en GD.TGESTORDOCUMENTAL_Clasificacion
-CREATE PROCEDURE GD.PA_ActualizarClasificacion
+CREATE OR ALTER PROCEDURE GD.PA_ActualizarClasificacion
     @pN_Id INT,
     @pC_Nombre NVARCHAR(255),
     @pC_Descripcion NVARCHAR(500),
@@ -67,7 +67,7 @@ CREATE PROCEDURE GD.PA_ActualizarClasificacion
 AS
 BEGIN
 	
-	DECLARE @pC_Operacion NVARCHAR(255) = 'Actualizar Norma';
+	DECLARE @pC_Operacion NVARCHAR(255) = 'Actualizar Clasificacion';
     DECLARE @pC_Comando NVARCHAR(255);
 
     BEGIN TRY
@@ -91,7 +91,7 @@ BEGIN
         -- Validar que el nombre no exista para otra clasificacion
         IF EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Clasificacion WHERE TC_Nombre = @pC_Nombre AND TN_Id != @pN_Id)
         BEGIN
-            SET @pC_Comando = 'Ya existe una clasificacion con el mismo nombre' + @pC_Nombre;
+            SET @pC_Comando = 'Ya existe una clasificacion con el mismo nombre: ' + @pC_Nombre;
             EXEC GD.PA_InsertarBitacora 
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
@@ -122,25 +122,27 @@ BEGIN
 
     END TRY
     BEGIN CATCH
+	ROLLBACK TRANSACTION;
         SET @pC_Comando = ERROR_MESSAGE();
         EXEC GD.PA_InsertarBitacora 
             @pN_UsuarioID = @pN_UsuarioID,
             @pC_Operacion = @pC_Operacion,
             @pC_Comando = @pC_Comando,
             @pN_OficinaID = @pN_OficinaID;
+		RETURN 1;
     END CATCH
 END;
 GO
 
 -- Procedimiento para eliminar en GD.TGESTORDOCUMENTAL_Clasificacion (eliminacion logica)
-CREATE PROCEDURE GD.PA_EliminarClasificacion
+CREATE OR ALTER PROCEDURE GD.PA_EliminarClasificacion
     @pN_Id INT,
     @pN_UsuarioID INT, -- ID del usuario
     @pN_OficinaID INT  -- ID de la oficina
 AS
 BEGIN
 
-	DECLARE @pC_Operacion NVARCHAR(255) = 'Actualizar Norma';
+	DECLARE @pC_Operacion NVARCHAR(255) = 'Eliminar Clasificacion';
     DECLARE @pC_Comando NVARCHAR(255);
 
     BEGIN TRY
@@ -180,7 +182,7 @@ BEGIN
         SET TB_Eliminado = 1
         WHERE TN_Id = @pN_Id;
 
-		SET @pC_Comando = 'Eliminar norma con ID ' + CAST(@pN_Id AS NVARCHAR(10));
+		SET @pC_Comando = 'Eliminar clasificacion con ID ' + CAST(@pN_Id AS NVARCHAR(10));
         EXEC GD.PA_InsertarBitacora 
             @pN_UsuarioID = @pN_UsuarioID,
             @pC_Operacion = @pC_Operacion,
@@ -192,18 +194,20 @@ BEGIN
 
     END TRY
     BEGIN CATCH
+	ROLLBACK TRANSACTION;
         SET @pC_Comando = ERROR_MESSAGE();
         EXEC GD.PA_InsertarBitacora 
             @pN_UsuarioID = @pN_UsuarioID,
             @pC_Operacion = @pC_Operacion,
             @pC_Comando = @pC_Comando,
             @pN_OficinaID = @pN_OficinaID;
+		RETURN 1;
     END CATCH
 END;
 GO
 
 -- Procedimiento para listar todas las clasificaciones no eliminadas
-CREATE PROCEDURE GD.PA_ListarClasificaciones
+CREATE OR ALTER PROCEDURE GD.PA_ListarClasificaciones
 AS
 BEGIN
     SELECT TN_Id as Id,
@@ -216,7 +220,7 @@ END;
 GO
 
 -- Procedimiento para obtener una clasificacion por ID
-CREATE PROCEDURE GD.PA_ObtenerClasificacionPorId
+CREATE OR ALTER PROCEDURE GD.PA_ObtenerClasificacionPorId
     @pN_Id INT
 AS
 BEGIN

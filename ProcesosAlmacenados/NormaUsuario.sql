@@ -65,3 +65,13 @@ BEGIN
     END CATCH
 END;
 GO
+
+CREATE PROCEDURE SC.PA_ListarNormaUsuario 
+AS
+BEGIN
+    SELECT
+	TN_NormaID AS NormaID,
+	TN_UsuarioID AS UsuarioID	
+	FROM SC.TGESTORDOCUMENTAL_Norma_Usuario 
+	ORDER BY TN_NormaID DESC
+END
