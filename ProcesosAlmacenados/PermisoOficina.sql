@@ -1,6 +1,6 @@
 --USE GestorDocumentalOIJ
 
-CREATE or alter PROCEDURE SC.PA_InsertarPermisoOficina
+CREATE PROCEDURE SC.PA_InsertarPermisoOficina
     @pN_PermisoID INT,
     @pN_OficinaID INT
 AS
@@ -16,7 +16,7 @@ BEGIN
         END
 
         -- Validar que el usuario exista
-        IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Oficina WHERE TN_Id = @pN_OficinaID AND TB_Eliminado = 0)
+        IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Oficina WHERE TN_Id = @pN_OficinaID AND TB_Eliminado = 1)
         BEGIN
             ROLLBACK;
             RETURN 1; -- Usuario no encontrado
@@ -75,4 +75,3 @@ BEGIN
 	FROM SC.TGESTORDOCUMENTAL_Permiso_Oficina
 	ORDER BY TN_PermisoID DESC
 END
-ghj
