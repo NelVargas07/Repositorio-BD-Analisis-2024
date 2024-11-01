@@ -65,3 +65,13 @@ BEGIN
     END CATCH
 END;
 GO
+
+CREATE PROCEDURE SC.PA_ListarGestorOficina
+AS
+BEGIN
+    SELECT
+	TN_GestorID AS GestorID,
+	TN_OficinaID AS OficinaID	
+	FROM SC.TGESTORDOCUMENTAL_Oficina_Gestor 
+	ORDER BY TN_GestorID DESC
+END

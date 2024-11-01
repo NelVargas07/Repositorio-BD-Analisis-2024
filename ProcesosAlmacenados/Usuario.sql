@@ -157,6 +157,37 @@ BEGIN
 END;
 GO
 
+CREATE PROCEDURE SC.PA_ListarUsuariosPorOficina
+    @pN_OficinaID INT
+AS
+BEGIN
+    DECLARE @esGestor BIT;
+
+    -- Validamos si la oficina es gestor
+    SELECT @esGestor = TB_Gestor
+    FROM SC.TGESTORDOCUMENTAL_Oficina
+    WHERE TN_Id = @pN_OficinaID;
+
+    IF @esGestor = 1
+    BEGIN
+        -- Si la oficina es un gestor, traemos los usuarios de todas las oficinas que pertenecen a este gestor
+        SELECT u.TN_Id AS Id, u.TC_Nombre as Nombre, u.TC_Apellido as Apellido, u.TC_Correo as Correo
+        FROM SC.TGESTORDOCUMENTAL_Usuario u
+        INNER JOIN SC.TGESTORDOCUMENTAL_Oficina_Usuario ou ON u.TN_Id = ou.TN_UsuarioID
+        INNER JOIN SC.TGESTORDOCUMENTAL_Oficina_Gestor og ON ou.TN_OficinaID = og.TN_OficinaID
+        WHERE og.TN_GestorID = @pN_OficinaID AND u.TB_Eliminado = 0 AND u.TB_Activo = 1;
+    END
+    ELSE
+    BEGIN
+        -- Si la oficina no es gestor, traemos solo los usuarios de la oficina específica
+        SELECT u.TN_Id AS Id, u.TC_Nombre as Nombre, u.TC_Apellido as Apellido, u.TC_Correo as Correo
+        FROM SC.TGESTORDOCUMENTAL_Usuario u
+        INNER JOIN SC.TGESTORDOCUMENTAL_Oficina_Usuario ou ON u.TN_Id = ou.TN_UsuarioID
+        WHERE ou.TN_OficinaID = @pN_OficinaID AND u.TB_Eliminado = 0 AND u.TB_Activo = 1;
+    END
+END;
+
+
 CREATE PROCEDURE SC.PA_ValidarLoginUsuario
     @pC_Correo NVARCHAR(255),
     @pC_Password NVARCHAR(255)
