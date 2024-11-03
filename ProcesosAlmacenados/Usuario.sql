@@ -118,6 +118,7 @@ BEGIN
         WHERE TN_Id = @pN_Id;
 
 		delete from SC.TGESTORDOCUMENTAL_Oficina_Usuario WHERE TN_UsuarioID = @pN_Id
+        delete from GD.TGESTORDOCUMENTAL_Norma_Usuario  WHERE TN_UsuarioID = @pN_Id
 
         COMMIT;
         RETURN 0;
@@ -157,7 +158,7 @@ BEGIN
 END;
 GO
 
-CREATE PROCEDURE SC.PA_ListarUsuariosPorOficina
+CREATE or alter PROCEDURE SC.PA_ListarUsuariosPorOficina
     @pN_OficinaID INT
 AS
 BEGIN
@@ -171,7 +172,7 @@ BEGIN
     IF @esGestor = 1
     BEGIN
         -- Si la oficina es un gestor, traemos los usuarios de todas las oficinas que pertenecen a este gestor
-        SELECT u.TN_Id AS Id, u.TC_Nombre as Nombre, u.TC_Apellido as Apellido, u.TC_Correo as Correo
+        SELECT u.TN_Id AS Id, u.TC_Correo AS Correo, '00000' as Password, u.TC_Nombre AS Nombre, u.TC_Apellido as Apellido, u.TN_RolID as RolID, u.TB_Activo AS Activo, u.TB_Eliminado as Eliminado
         FROM SC.TGESTORDOCUMENTAL_Usuario u
         INNER JOIN SC.TGESTORDOCUMENTAL_Oficina_Usuario ou ON u.TN_Id = ou.TN_UsuarioID
         INNER JOIN SC.TGESTORDOCUMENTAL_Oficina_Gestor og ON ou.TN_OficinaID = og.TN_OficinaID
@@ -180,12 +181,13 @@ BEGIN
     ELSE
     BEGIN
         -- Si la oficina no es gestor, traemos solo los usuarios de la oficina específica
-        SELECT u.TN_Id AS Id, u.TC_Nombre as Nombre, u.TC_Apellido as Apellido, u.TC_Correo as Correo
+        SELECT u.TN_Id AS Id, u.TC_Correo AS Correo, '00000' as Password, u.TC_Nombre AS Nombre, u.TC_Apellido as Apellido, u.TN_RolID as RolID, u.TB_Activo AS Activo, u.TB_Eliminado as Eliminado
         FROM SC.TGESTORDOCUMENTAL_Usuario u
         INNER JOIN SC.TGESTORDOCUMENTAL_Oficina_Usuario ou ON u.TN_Id = ou.TN_UsuarioID
         WHERE ou.TN_OficinaID = @pN_OficinaID AND u.TB_Eliminado = 0 AND u.TB_Activo = 1;
     END
 END;
+
 
 
 CREATE PROCEDURE SC.PA_ValidarLoginUsuario

@@ -180,6 +180,8 @@ BEGIN
             @pC_Comando = @pC_Comando,
             @pN_OficinaID = @pN_OficinaID;
 
+        delete from GD.TGESTORDOCUMENTAL_Norma_Usuario  WHERE TN_NormaID = @pN_Id
+
         COMMIT TRANSACTION;
         RETURN 0;
 
