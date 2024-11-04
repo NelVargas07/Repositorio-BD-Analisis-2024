@@ -195,8 +195,6 @@ CREATE PROCEDURE SC.PA_ValidarLoginUsuario
     @pC_Password NVARCHAR(255)
 AS
 BEGIN
-    SET NOCOUNT ON;
-
     BEGIN TRY
         BEGIN TRANSACTION;
 
@@ -204,8 +202,9 @@ BEGIN
         IF EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Usuario WHERE TC_Correo = @pC_Correo AND TC_Password = @pC_Password 
               AND TB_Activo = 1 AND TB_Eliminado = 0)
         BEGIN
-            COMMIT;
-            RETURN 0; 
+            SELECT u.TN_Id AS Id, u.TC_Correo AS Correo, '00000' as Password, u.TC_Nombre AS Nombre, u.TC_Apellido as Apellido, u.TN_RolID as RolID, u.TB_Activo AS Activo, u.TB_Eliminado as Eliminado
+            FROM SC.TGESTORDOCUMENTAL_Usuario u
+            WHERE TC_Correo = @pC_Correo AND TC_Password = @pC_Password
         END
         ELSE
         BEGIN
