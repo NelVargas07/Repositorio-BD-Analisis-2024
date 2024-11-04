@@ -196,7 +196,6 @@ CREATE PROCEDURE SC.PA_ValidarLoginUsuario
 AS
 BEGIN
     BEGIN TRY
-        BEGIN TRANSACTION;
 
         -- Validar que el usuario exista, est� activo y no est� eliminado
         IF EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Usuario WHERE TC_Correo = @pC_Correo AND TC_Password = @pC_Password 
@@ -208,13 +207,11 @@ BEGIN
         END
         ELSE
         BEGIN
-            ROLLBACK;
             RETURN 1; 
         END
 
     END TRY
     BEGIN CATCH
-        ROLLBACK;
         RETURN 1; 
     END CATCH
 END;
