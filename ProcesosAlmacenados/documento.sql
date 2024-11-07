@@ -17,6 +17,7 @@ CREATE or alter PROCEDURE GD.PA_InsertarDocumento
 	@pN_DocToID INT,
     @pN_UsuarioID INT, 
     @pN_OficinaBitacoraID INT,
+    @pC_PalabraClaves NVARCHAR(MAX),
     @pC_Doctos NVARCHAR(MAX)
 AS
 BEGIN
@@ -102,7 +103,7 @@ BEGIN
         END
 
         -- Insertar el nuevo documento
-        INSERT INTO GD.TGESTORDOCUMENTAL_Documento (TC_Codigo, TC_Asunto, TC_Descripcion, TC_PalabraClave, TN_CategoriaID, TN_TipoDocumento, TN_OficinaID, TC_Vigencia, TN_EtapaID, TN_SubClasificacionID, TN_DocTo, TB_Activo,TB_Descargable)
+        INSERT INTO GD.TGESTORDOCUMENTAL_Documento (TC_Codigo, TC_Asunto, TC_Descripcion, TB_PalabraClave, TN_CategoriaID, TN_TipoDocumento, TN_OficinaID, TC_Vigencia, TN_EtapaID, TN_SubClasificacionID, TN_DocTo, TB_Activo,TB_Descargable)
         VALUES (@pC_Codigo, @pC_Asunto, @pC_Descripcion, @pC_PalabraClave, @pN_CategoriaID, @pN_TipoDocumento, @pN_OficinaID, @pC_Vigencia, @pN_EtapaID, @pN_SubClasificacionID,@pN_DocToID,@pB_Activo,@pB_Descargable);
 
         DECLARE @TN_DocumentoID INT = SCOPE_IDENTITY(); -- Obtener el ID del nuevo documento
@@ -144,12 +145,41 @@ BEGIN
             SET @i = @i + 1;
         END
 
-		SET @pC_Comando = 'Insertar relaciones de documento del documento: ' + CAST(@TN_DocumentoID AS NVARCHAR(10));
-        EXEC GD.PA_InsertarBitacora 
-            @pN_UsuarioID = @pN_UsuarioID,
-            @pC_Operacion = @pC_Operacion,
-            @pC_Comando = @pC_Comando,
-            @pN_OficinaID = @pN_OficinaBitacoraID;
+        IF @total_records > 0
+        BEGIN
+		    SET @pC_Comando = 'Insertar relaciones de documento del documento: ' + CAST(@TN_DocumentoID AS NVARCHAR(10));
+            EXEC GD.PA_InsertarBitacora 
+                @pN_UsuarioID = @pN_UsuarioID,
+                @pC_Operacion = @pC_Operacion,
+                @pC_Comando = @pC_Comando,
+                @pN_OficinaID = @pN_OficinaBitacoraID;
+        END
+
+        DECLARE @JSONPalabra NVARCHAR(MAX) = @pC_PalabraClaves;
+        DECLARE @j INT = 0;
+        DECLARE @total_palabras INT = (SELECT COUNT(*) FROM OPENJSON(@JSONPalabra));
+
+        WHILE @i < @total_palabras
+        BEGIN
+
+            DECLARE @PalabraClave NVARCHAR(255) = JSON_VALUE(@JSONPalabra, CONCAT('$[', @i, '].palabraClave'));
+			select @PalabraClave
+
+            INSERT INTO GD.TGESTORDOCUMENTAL_Documento_PalabraClave (TN_DocumentoID, TC_PalabraClave)
+            VALUES (@TN_DocumentoID, @PalabraClave);
+
+            SET @i = @i + 1;
+        END   
+
+        IF @total_palabras > 0
+        BEGIN
+		    SET @pC_Comando = 'Insertar palabras clave del documento: ' + CAST(@TN_DocumentoID AS NVARCHAR(10));
+            EXEC GD.PA_InsertarBitacora 
+                @pN_UsuarioID = @pN_UsuarioID,
+                @pC_Operacion = @pC_Operacion,
+                @pC_Comando = @pC_Comando,
+                @pN_OficinaID = @pN_OficinaBitacoraID;
+        END
 
         COMMIT TRANSACTION;
         RETURN 0; -- �xito
@@ -184,6 +214,7 @@ CREATE OR ALTER PROCEDURE GD.PA_ActualizarDocumento
 	@pB_Descargable BIT,
     @pN_UsuarioID INT,  
     @pN_OficinaBitacoraID INT,
+    @pC_PalabraClaves NVARCHAR(MAX),
     @pC_Doctos NVARCHAR(MAX)
 AS
 BEGIN
@@ -289,7 +320,7 @@ BEGIN
         SET TC_Codigo = @pC_Codigo,
             TC_Asunto = @pC_Asunto,
             TC_Descripcion = @pC_Descripcion,
-            TC_PalabraClave = @pC_PalabraClave,
+            TB_PalabraClave = @pC_PalabraClave,
             TN_CategoriaID = @pN_CategoriaID,
             TN_TipoDocumento = @pN_TipoDocumento,
             TN_OficinaID = @pN_OficinaID,
@@ -343,12 +374,41 @@ BEGIN
             SET @i = @i + 1;
         END
 
-		SET @pC_Comando = 'Actualizar relaciones de documento del documento: ' + CAST(@pN_Id AS NVARCHAR(10));
-        EXEC GD.PA_InsertarBitacora 
-            @pN_UsuarioID = @pN_UsuarioID,
-            @pC_Operacion = @pC_Operacion,
-            @pC_Comando = @pC_Comando,
-            @pN_OficinaID = @pN_OficinaBitacoraID;
+        IF @total_records > 0
+        BEGIN
+            SET @pC_Comando = 'Actualizar relaciones de documento del documento: ' + CAST(@pN_Id AS NVARCHAR(10));
+            EXEC GD.PA_InsertarBitacora 
+                @pN_UsuarioID = @pN_UsuarioID,
+                @pC_Operacion = @pC_Operacion,
+                @pC_Comando = @pC_Comando,
+                @pN_OficinaID = @pN_OficinaBitacoraID;
+        END
+
+        DECLARE @JSONPalabra NVARCHAR(MAX) = @pC_PalabraClaves;
+        DECLARE @j INT = 0;
+        DECLARE @total_palabras INT = (SELECT COUNT(*) FROM OPENJSON(@JSONPalabra));
+
+        WHILE @i < @total_palabras
+        BEGIN
+
+            DECLARE @PalabraClave NVARCHAR(255) = JSON_VALUE(@JSONPalabra, CONCAT('$[', @i, '].palabraClave'));
+			select @PalabraClave
+
+            INSERT INTO GD.TGESTORDOCUMENTAL_Documento_PalabraClave (TN_DocumentoID, TC_PalabraClave)
+            VALUES (@pN_Id, @PalabraClave);
+
+            SET @i = @i + 1;
+        END   
+
+        IF @total_palabras > 0
+        BEGIN
+		    SET @pC_Comando = 'Insertar palabras clave del documento: ' + CAST(@pN_Id AS NVARCHAR(10));
+            EXEC GD.PA_InsertarBitacora 
+                @pN_UsuarioID = @pN_UsuarioID,
+                @pC_Operacion = @pC_Operacion,
+                @pC_Comando = @pC_Comando,
+                @pN_OficinaID = @pN_OficinaBitacoraID;
+        END
 
         COMMIT TRANSACTION;
         RETURN 0;  -- Actualización exitosa
@@ -429,6 +489,19 @@ BEGIN
             @pC_Comando = @pC_Comando,
             @pN_OficinaID = @pN_OficinaID;
 
+        IF EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Documento WHERE TN_DocumentoID = @pN_Id and TB_PalabraClave = 1)
+        BEGIN
+            DELETE FROM GD.TGESTORDOCUMENTAL_Documento_PalabraClave
+            WHERE TN_DocumentoID = @pN_Id;
+
+            SET @pC_Comando = 'Eliminar palabras claves de documento con ID ' + CAST(@pN_Id AS NVARCHAR(10));
+            EXEC GD.PA_InsertarBitacora 
+            @pN_UsuarioID = @pN_UsuarioID,
+            @pC_Operacion = @pC_Operacion,
+            @pC_Comando = @pC_Comando,
+            @pN_OficinaID = @pN_OficinaID;
+        END
+
         COMMIT TRANSACTION;
         RETURN 0;
 
@@ -504,7 +577,7 @@ BEGIN
         D.TC_Descripcion AS Descripcion,
         D.TN_CategoriaID AS CategoriaID,
         D.TN_TipoDocumento AS TipoDocumento,
-        D.TC_PalabraClave AS PalabraClave,
+        D.TB_PalabraClave AS PalabraClave,
         D.TN_OficinaID AS OficinaID,
         D.TC_Vigencia AS Vigencia,
         D.TN_EtapaID AS EtapaID,
@@ -602,7 +675,7 @@ BEGIN
         D.TC_Codigo AS Codigo, 
         D.TC_Asunto AS Asunto, 
         D.TC_Descripcion AS Descripcion, 
-        D.TC_PalabraClave AS PalabraClave, 
+        D.TB_PalabraClave AS PalabraClave, 
         D.TN_CategoriaID AS CategoriaID, 
         D.TN_TipoDocumento AS TipoDocumento, 
         D.TN_OficinaID AS OficinaID, 

@@ -1,0 +1,83 @@
+-- Procedimiento: Bitácora Movimiento
+-- CREATE OR ALTER PROCEDURE GD.PA_ReporteBitacoraMovimiento
+--     @pC_CodigoDocumento NVARCHAR(255),
+--     @pC_NombreDocumento NVARCHAR(255),
+--     @pN_OficinaID INT,
+--     @pN_UsuarioID INT,
+--     @pF_FechaInicio DATETIME,
+--     @pF_FechaFin DATETIME
+-- AS
+-- BEGIN
+--     -- Código pendiente de implementación
+-- END
+-- GO
+
+-- Procedimiento: Bitácora Control de Versiones
+-- CREATE OR ALTER PROCEDURE GD.PA_ReporteBitacoraControlDeVersiones
+--     @pC_CodigoDocumento NVARCHAR(255),
+--     @pC_NombreDocumento NVARCHAR(255),
+--     @pC_TipoDocumento NVARCHAR(255)
+-- AS
+-- BEGIN
+--     -- Código pendiente de implementación
+-- END
+-- GO
+
+-- Procedimiento: Bitácora Documentos Antiguos
+-- CREATE OR ALTER PROCEDURE GD.PA_ReporteBitacoraDocumentosAntiguos
+--     @pN_OficinaID INT,
+--     @pC_TipoDocumento NVARCHAR(255),
+--     @pF_Fecha DATETIME
+-- AS
+-- BEGIN
+--     -- Código pendiente de implementación
+-- END
+-- GO
+
+-- Procedimiento: Reporte Maestro de Documentos
+-- CREATE OR ALTER PROCEDURE GD.PA_ReporteMaestroDocumentos
+--     @pN_OficinaID INT,
+--     @pC_TipoDocumento NVARCHAR(255)
+-- AS
+-- BEGIN
+--     -- Código pendiente de implementación
+-- END
+-- GO
+
+-- Procedimiento: Reporte Maestro Comandos por Norma
+-- CREATE OR ALTER PROCEDURE GD.PA_ReporteMaestroDocumentoPorNorma
+--     @pN_OficinaID INT,
+--     @pC_TipoDocumento NVARCHAR(255),
+--     @pC_Categoria NVARCHAR(255),
+--     @pC_Norma NVARCHAR(255)
+-- AS
+-- BEGIN
+--     -- Código pendiente de implementación
+-- END
+-- GO
+
+-- Procedimiento: Documentos Descargados
+-- CREATE OR ALTER PROCEDURE GD.PA_ReporteDocumentosDescargados
+--     @pC_CodigoDocumento NVARCHAR(255),
+--     @pN_NumeroDocumento INT,
+--     @pN_OficinaID INT,
+--     @pN_UsuarioID INT,
+--     @pF_FechaFin DATETIME,
+--     @pF_FechaInicio DATETIME
+-- AS
+-- BEGIN
+--     -- Código pendiente de implementación
+-- END
+-- GO
+
+-- Procedimiento: Reportes de Documentos sin Movimiento
+CREATE OR ALTER PROCEDURE GD.PA_ReportesDocSinMovimiento
+    @pN_OficinaID INT,
+    @pC_TipoDocumento NVARCHAR(255),
+    @pF_FechaFin DATETIME,
+    @pF_FechaInicio DATETIME
+AS
+BEGIN
+    -- Código pendiente de implementación
+END
+GO
