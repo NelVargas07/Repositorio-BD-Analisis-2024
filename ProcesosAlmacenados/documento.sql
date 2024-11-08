@@ -5,7 +5,7 @@ CREATE or alter PROCEDURE GD.PA_InsertarDocumento
     @pC_Codigo NVARCHAR(255),
     @pC_Asunto NVARCHAR(255),
     @pC_Descripcion NVARCHAR(1000),
-    @pC_PalabraClave NVARCHAR(255),
+    @pB_PalabraClave BIT,
     @pN_CategoriaID INT,
     @pN_TipoDocumento INT,
     @pN_OficinaID INT,
@@ -104,7 +104,7 @@ BEGIN
 
         -- Insertar el nuevo documento
         INSERT INTO GD.TGESTORDOCUMENTAL_Documento (TC_Codigo, TC_Asunto, TC_Descripcion, TB_PalabraClave, TN_CategoriaID, TN_TipoDocumento, TN_OficinaID, TC_Vigencia, TN_EtapaID, TN_SubClasificacionID, TN_DocTo, TB_Activo,TB_Descargable)
-        VALUES (@pC_Codigo, @pC_Asunto, @pC_Descripcion, @pC_PalabraClave, @pN_CategoriaID, @pN_TipoDocumento, @pN_OficinaID, @pC_Vigencia, @pN_EtapaID, @pN_SubClasificacionID,@pN_DocToID,@pB_Activo,@pB_Descargable);
+        VALUES (@pC_Codigo, @pC_Asunto, @pC_Descripcion, @pB_PalabraClave, @pN_CategoriaID, @pN_TipoDocumento, @pN_OficinaID, @pC_Vigencia, @pN_EtapaID, @pN_SubClasificacionID,@pN_DocToID,@pB_Activo,@pB_Descargable);
 
         DECLARE @TN_DocumentoID INT = SCOPE_IDENTITY(); -- Obtener el ID del nuevo documento
 
@@ -202,7 +202,7 @@ CREATE OR ALTER PROCEDURE GD.PA_ActualizarDocumento
     @pC_Codigo NVARCHAR(255),
     @pC_Asunto NVARCHAR(255),
     @pC_Descripcion NVARCHAR(1000),
-    @pC_PalabraClave NVARCHAR(255),
+    @pB_PalabraClave BIT,
     @pN_CategoriaID INT,
     @pN_TipoDocumento INT,
     @pN_OficinaID INT,
@@ -320,7 +320,7 @@ BEGIN
         SET TC_Codigo = @pC_Codigo,
             TC_Asunto = @pC_Asunto,
             TC_Descripcion = @pC_Descripcion,
-            TB_PalabraClave = @pC_PalabraClave,
+            TB_PalabraClave = @pB_PalabraClave,
             TN_CategoriaID = @pN_CategoriaID,
             TN_TipoDocumento = @pN_TipoDocumento,
             TN_OficinaID = @pN_OficinaID,
@@ -489,7 +489,7 @@ BEGIN
             @pC_Comando = @pC_Comando,
             @pN_OficinaID = @pN_OficinaID;
 
-        IF EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Documento WHERE TN_DocumentoID = @pN_Id and TB_PalabraClave = 1)
+        IF EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Documento WHERE TN_Id = @pN_Id and TB_PalabraClave = 1)
         BEGIN
             DELETE FROM GD.TGESTORDOCUMENTAL_Documento_PalabraClave
             WHERE TN_DocumentoID = @pN_Id;
@@ -527,7 +527,6 @@ BEGIN
 		SELECT 
 			V.TN_Id AS VersionID,
 			V.TN_DocumentoID,
-			V.TC_UrlVersion,
 			V.TN_NumeroVersion,
 			V.TF_FechaCreacion,
 			ROW_NUMBER() OVER (PARTITION BY V.TN_DocumentoID ORDER BY V.TN_NumeroVersion DESC, V.TF_FechaCreacion DESC) AS rn
@@ -567,6 +566,7 @@ BEGIN
             V.TC_UrlVersion,
             V.TN_NumeroVersion,
             V.TF_FechaCreacion,
+            V.TB_Eliminado,
             ROW_NUMBER() OVER (PARTITION BY V.TN_DocumentoID ORDER BY V.TN_NumeroVersion DESC, V.TF_FechaCreacion DESC) AS rn
         FROM GD.TGESTORDOCUMENTAL_Version V
     )
@@ -594,7 +594,7 @@ BEGIN
     LEFT JOIN Versiones V ON V.TN_DocumentoID = D.TN_Id AND V.rn = 1
     JOIN GD.TGESTORDOCUMENTAL_Subclasificacion SC ON SC.TN_Id = D.TN_SubClasificacionID
     JOIN GD.TGESTORDOCUMENTAL_Clasificacion C ON C.TN_Id = SC.TN_ClasificacionID
-    WHERE D.TB_Eliminado = 0 AND D.TB_Activo = 1
+    WHERE D.TB_Eliminado = 0 AND D.TB_Activo = 1 AND V.TB_Eliminado = 0
     ORDER BY D.TN_Id; -- Puedes ajustar el orden según lo necesites
 END;
 GO

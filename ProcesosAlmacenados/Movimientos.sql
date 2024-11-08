@@ -1,7 +1,7 @@
 CREATE PROCEDURE GD.PA_InsertarBitacoraMovimientos
     @pN_VersionID INT,
     @pN_UsuarioID INT,
-    @pC_Movimiento NVARCHAR(50)
+    @pB_Movimiento BIT
 AS
 BEGIN
     BEGIN TRY
@@ -24,8 +24,8 @@ BEGIN
         END
 
         -- Inserción en la bitácora de movimientos
-        INSERT INTO GD.TGESTORDOCUMENTAL_BitacoraMovimientos (TN_VersionID, TF_FechaIngreso, TN_UsuarioID, TC_Movimiento)
-        VALUES (@pN_VersionID, GETDATE(), @pN_UsuarioID, @pC_Movimiento);
+        INSERT INTO GD.TGESTORDOCUMENTAL_BitacoraMovimientos (TN_VersionID, TF_FechaIngreso, TN_UsuarioID, TB_Movimiento)
+        VALUES (@pN_VersionID, GETDATE(), @pN_UsuarioID, @pB_Movimiento);
 
         COMMIT TRANSACTION;
         RETURN 0;

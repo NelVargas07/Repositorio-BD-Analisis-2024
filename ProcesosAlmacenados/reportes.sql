@@ -1,6 +1,6 @@
 --USE GestorDocumentalOIJ
 
---1
+--1 LISTO --
 CREATE OR ALTER PROCEDURE GD.PA_ReporteBitacoraDeMovimiento
     @pC_CodigoDocumento NVARCHAR(255) = NULL,
     @pC_NombreDocumento NVARCHAR(255) = NULL,
@@ -10,6 +10,14 @@ CREATE OR ALTER PROCEDURE GD.PA_ReporteBitacoraDeMovimiento
     @pF_FechaFinal DATE
 AS
 BEGIN
+
+    BEGIN
+        IF @pN_OficinaID = 0 SET @pN_OficinaID = NULL
+        IF @pC_NombreDocumento = '' SET @pC_NombreDocumento = NULL
+        IF @pN_UsuarioID = 0 SET @pN_UsuarioID = NULL
+        IF @pC_CodigoDocumento = '' SET @pC_CodigoDocumento = NULL
+    END;
+
     WITH Versiones AS (
         SELECT 
             V.TN_Id AS VersionID,
@@ -20,6 +28,7 @@ BEGIN
             ROW_NUMBER() OVER (PARTITION BY V.TN_DocumentoID ORDER BY V.TN_NumeroVersion DESC, V.TF_FechaCreacion DESC) AS rn
         FROM GD.TGESTORDOCUMENTAL_Version V
     )
+
     SELECT 
         D.TC_Codigo AS CodigoDocumento,
         D.TC_Asunto AS NombreDocumento,
@@ -28,7 +37,7 @@ BEGIN
         V.TF_FechaCreacion AS FechaIngreso,
         U.TC_Nombre AS Usuario,
         CASE 
-        WHEN BM.TC_Movimiento = 0 
+        WHEN BM.TB_Movimiento = 0 
         THEN 'Visualizado' ELSE 'Descargado' END AS Movimiento,
         O.TC_Nombre AS OficinaResponsable
     FROM 
@@ -46,17 +55,25 @@ BEGIN
     WHERE 
         (@pC_CodigoDocumento IS NULL OR D.TC_Codigo = @pC_CodigoDocumento)
         AND (@pC_NombreDocumento IS NULL OR D.TC_Asunto LIKE '%' + @pC_NombreDocumento + '%')
-        @pF_FechaInicio IS NULL OR CONVERT(DATE, V.TF_FechaCreacion) >= @pF_FechaInicio
-        @pF_FechaFinal IS NULL OR CONVERT(DATE, V.TF_FechaCreacion) <= @pF_FechaFinal
+        AND @pF_FechaInicio IS NULL OR CONVERT(DATE, V.TF_FechaCreacion) >= @pF_FechaInicio
+        AND @pF_FechaFinal IS NULL OR CONVERT(DATE, V.TF_FechaCreacion) <= @pF_FechaFinal
 END
 
---2
+--2 LISTO --
 CREATE OR ALTER PROCEDURE GD.PA_ReporteControlDeVersiones
     @pC_CodigoDocumento NVARCHAR(255) = NULL,
     @pC_NombreDocumento NVARCHAR(255) = NULL,
+    @pN_OficinaID INT = NULL,
     @pN_TipoDocumento INT = NULL
 AS
 BEGIN
+    BEGIN
+        IF @pN_OficinaID = 0 SET @pN_OficinaID = NULL
+        IF @pC_NombreDocumento = '' SET @pC_NombreDocumento = NULL
+        IF @pN_TipoDocumento = 0 SET @pN_TipoDocumento = NULL
+        IF @pC_CodigoDocumento = '' SET @pC_CodigoDocumento = NULL
+    END;
+
     SELECT 
         D.TC_Codigo AS CodigoDocumento,
         D.TC_Asunto AS NombreDocumento,
@@ -71,17 +88,24 @@ BEGIN
     WHERE 
         (@pC_CodigoDocumento IS NULL OR D.TC_Codigo = @pC_CodigoDocumento) AND
         (@pC_NombreDocumento IS NULL OR D.TC_Asunto LIKE '%' + @pC_NombreDocumento + '%') AND
-        (@pN_TipoDocumento IS NULL OR TD.TC_Nombre = @pN_TipoDocumento)
+        (@pN_TipoDocumento IS NULL OR TD.TN_Id = @pN_TipoDocumento) AND
+        (@pN_OficinaID IS NULL OR D.TN_OficinaID = @pN_OficinaID)
 END
 GO
 
---3
+--3 LISTO --
 CREATE OR ALTER PROCEDURE GD.PA_ReporteDocumentosAntiguos
     @pN_OficinaID INT = NULL,
     @pN_TipoDocumento INT = NULL,
     @pF_Fecha DATE
 AS
 BEGIN
+
+    BEGIN
+        IF @pN_OficinaID = 0 SET @pN_OficinaID = NULL
+        IF @pN_TipoDocumento = 0 SET @pN_TipoDocumento = NULL
+    END;
+
     WITH Versiones AS (
         SELECT 
             V.TN_Id AS VersionID,
@@ -92,6 +116,7 @@ BEGIN
             ROW_NUMBER() OVER (PARTITION BY V.TN_DocumentoID ORDER BY V.TN_NumeroVersion DESC, V.TF_FechaCreacion DESC) AS rn
         FROM GD.TGESTORDOCUMENTAL_Version V
     )
+
     SELECT 
         D.TC_Codigo AS CodigoDocumento,
         D.TC_Asunto AS NombreDocumento,
@@ -110,17 +135,22 @@ BEGIN
 END
 GO
 
---4
+--4 LISTO --
 CREATE OR ALTER PROCEDURE GD.PA_ReporteMaestroDocumentos
     @pN_OficinaID INT = NULL,
     @pN_TipoDocumento INT = NULL
 AS
 BEGIN
+
+    BEGIN
+        IF @pN_OficinaID = 0 SET @pN_OficinaID = NULL
+        IF @pN_TipoDocumento = 0 SET @pN_TipoDocumento = NULL
+    END;
+
     WITH Versiones AS (
         SELECT 
             V.TN_Id AS VersionID,
             V.TN_DocumentoID,
-            V.TC_UrlVersion,
             V.TN_NumeroVersion,
             V.TF_FechaCreacion,
             V.TC_NumeroSCD,
@@ -128,6 +158,7 @@ BEGIN
             ROW_NUMBER() OVER (PARTITION BY V.TN_DocumentoID ORDER BY V.TN_NumeroVersion DESC, V.TF_FechaCreacion DESC) AS rn
         FROM GD.TGESTORDOCUMENTAL_Version V
     )
+
     SELECT 
         D.TC_Codigo AS CodigoDocumento,
         D.TC_Asunto AS NombreDocumento,
@@ -148,7 +179,7 @@ BEGIN
 END
 GO
 
---5
+--5 LISTO --
 CREATE OR ALTER PROCEDURE GD.PA_ReporteMaestroDocumentoPorNorma
     @pN_OficinaID INT = NULL,
     @pN_TipoDocumento INT = NULL,
@@ -156,11 +187,18 @@ CREATE OR ALTER PROCEDURE GD.PA_ReporteMaestroDocumentoPorNorma
     @pN_Norma INT = NULL
 AS
 BEGIN
+
+    BEGIN
+        IF @pN_OficinaID = 0 SET @pN_OficinaID = NULL
+        IF @pN_TipoDocumento = 0 SET @pN_TipoDocumento = NULL
+        IF @pN_Categoria = 0 SET @pN_Categoria = NULL
+        IF @pN_Norma = 0 SET @pN_Norma = NULL
+    END;
+
     WITH Versiones AS (
         SELECT 
             V.TN_Id AS VersionID,
             V.TN_DocumentoID,
-            V.TC_UrlVersion,
             V.TN_NumeroVersion,
             V.TF_FechaCreacion,
             V.TC_NumeroSCD,
@@ -168,6 +206,7 @@ BEGIN
             ROW_NUMBER() OVER (PARTITION BY V.TN_DocumentoID ORDER BY V.TN_NumeroVersion DESC, V.TF_FechaCreacion DESC) AS rn
         FROM GD.TGESTORDOCUMENTAL_Version V
     )
+
     SELECT 
         N.TC_Nombre AS NombreNorma,
         TD.TC_Nombre AS TipoDocumento,
@@ -179,7 +218,7 @@ BEGIN
         V.TF_FechaCreacion AS Fecha,
         V.TC_Justificacion AS ResumenDelCambio
     FROM GD.TGESTORDOCUMENTAL_Documento D
-    LEFT JOIN Versiones V ON D.TN_Id = V.TN_DocumentoID AND V.rn = 1
+    JOIN Versiones V ON D.TN_Id = V.TN_DocumentoID AND V.rn = 1
     JOIN GD.TGESTORDOCUMENTAL_TipoDocumento TD ON TD.TN_Id = D.TN_TipoDocumento 
     JOIN GD.TGESTORDOCUMENTAL_Categoria C ON C.TN_Id = D.TN_CategoriaID
     JOIN SC.TGESTORDOCUMENTAL_Oficina O ON O.TN_Id = D.TN_OficinaID
@@ -188,21 +227,29 @@ BEGIN
     WHERE 
         (@pN_OficinaID IS NULL OR D.TN_OficinaID = @pN_OficinaID )AND
         (@pN_TipoDocumento IS NULL OR TD.TN_Id = @pN_TipoDocumento) AND
-        (@pN_Categoria IS NULL OR C.TC_Nombre = @pN_Categoria) AND
-        (@pN_Norma IS NULL OR N.TC_Nombre = @pN_Norma) 
+        (@pN_Categoria IS NULL OR C.TN_Id = @pN_Categoria) AND
+        (@pN_Norma IS NULL OR N.TN_Id = @pN_Norma) 
 END
 GO
 
---6
+--6 LISTO --
 CREATE OR ALTER PROCEDURE GD.PA_ReporteDescargaDeDocumentos
-    @pC_Oficina NVARCHAR(255) = NULL,
-    @pC_Usuario NVARCHAR(255) = NULL,
+    @pN_Oficina INT = NULL,
+    @pN_Usuario INT = NULL,
     @pC_CodigoDocumento NVARCHAR(255) = NULL,
     @pC_NombreDocumento NVARCHAR(255) = NULL,
     @pF_FechaInicio DATE,
     @pF_FechaFinal DATE
 AS
 BEGIN
+
+    BEGIN
+        IF @pN_Oficina = 0 SET @pN_Oficina = NULL
+        IF @pC_NombreDocumento = '' SET @pC_NombreDocumento = NULL
+        IF @pN_Usuario = 0 SET @pN_Usuario = NULL
+        IF @pC_CodigoDocumento = '' SET @pC_CodigoDocumento = NULL
+    END;
+
     SELECT 
         D.TC_Codigo AS CodigoDocumento,
         D.TC_Asunto AS NombreDocumento,
@@ -227,12 +274,12 @@ BEGIN
     JOIN 
         SC.TGESTORDOCUMENTAL_Oficina O ON O.TN_Id = D.TN_OficinaID
     WHERE 
-        (@pC_Oficina IS NULL OR O.TC_Nombre LIKE '%' + @pC_Oficina + '%')
-        AND (@pC_Usuario IS NULL OR U.TC_Nombre LIKE '%' + @pC_Usuario + '%')
+        (@pN_Oficina IS NULL OR O.TN_Id = @pN_Oficina)
+        AND (@pN_Usuario IS NULL OR U.TN_Id = @pN_Usuario)
         AND (@pC_CodigoDocumento IS NULL OR D.TC_Codigo = @pC_CodigoDocumento)
         AND (@pC_NombreDocumento IS NULL OR D.TC_Asunto LIKE '%' + @pC_NombreDocumento + '%')
-        @pF_FechaInicio IS NULL OR CONVERT(DATE, V.TF_FechaCreacion) >= @pF_FechaInicio
-        @pF_FechaFinal IS NULL OR CONVERT(DATE, V.TF_FechaCreacion) <= @pF_FechaFinal
+        AND (@pF_FechaInicio IS NULL OR CONVERT(DATE, V.TF_FechaCreacion) >= @pF_FechaInicio)
+        AND (@pF_FechaFinal IS NULL OR CONVERT(DATE, V.TF_FechaCreacion) <= @pF_FechaFinal)
     GROUP BY
         D.TC_Codigo,
         D.TC_Asunto,
@@ -243,14 +290,20 @@ BEGIN
 END
 GO
 
---7
+--7 LISTO --
 CREATE OR ALTER PROCEDURE GD.PA_ReportesDocSinMovimiento
     @pN_OficinaID INT = NULL,
-    @pN_TipoDocumento NVARCHAR(255) = NULL,
+    @pN_TipoDocumento INT = NULL,
     @pF_FechaFin DATE,
     @pF_FechaInicio DATE
 AS
 BEGIN
+
+    BEGIN
+        IF @pN_OficinaID = 0 SET @pN_OficinaID = NULL
+        IF @pN_TipoDocumento = 0 SET @pN_TipoDocumento = NULL
+    END;
+
     WITH Versiones AS (
         SELECT 
             V.TN_Id AS VersionID,
@@ -263,6 +316,7 @@ BEGIN
             ROW_NUMBER() OVER (PARTITION BY V.TN_DocumentoID ORDER BY V.TN_NumeroVersion DESC, V.TF_FechaCreacion DESC) AS rn
         FROM GD.TGESTORDOCUMENTAL_Version V
     )
+
     SELECT 
         D.TC_Codigo AS CodigoDocumento,
         D.TC_Asunto AS NombreDocumento,
