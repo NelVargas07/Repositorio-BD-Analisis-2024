@@ -142,10 +142,7 @@ CREATE OR ALTER PROCEDURE GD.PA_ReporteMaestroDocumentos
 AS
 BEGIN
 
-    BEGIN
-        IF @pN_OficinaID = 0 SET @pN_OficinaID = NULL
-        IF @pN_TipoDocumento = 0 SET @pN_TipoDocumento = NULL
-    END;
+    
 
     WITH Versiones AS (
         SELECT 
@@ -169,7 +166,7 @@ BEGIN
         V.TC_Justificacion AS ResumenDelCambio,
         V.TC_NumeroSCD AS SCD
     FROM GD.TGESTORDOCUMENTAL_Documento D
-    LEFT JOIN Versiones V ON D.TN_Id = V.TN_DocumentoID AND V.rn = 1
+    JOIN Versiones V ON D.TN_Id = V.TN_DocumentoID AND V.rn = 1
     JOIN GD.TGESTORDOCUMENTAL_TipoDocumento TD ON TD.TN_Id = D.TN_TipoDocumento 
     JOIN GD.TGESTORDOCUMENTAL_Categoria C ON C.TN_Id = D.TN_CategoriaID
     JOIN SC.TGESTORDOCUMENTAL_Oficina O ON O.TN_Id = D.TN_OficinaID

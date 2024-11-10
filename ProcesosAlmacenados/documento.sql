@@ -4,20 +4,19 @@
 CREATE or alter PROCEDURE GD.PA_InsertarDocumento
     @pC_Codigo NVARCHAR(255),
     @pC_Asunto NVARCHAR(255),
-    @pC_Descripcion NVARCHAR(1000),
-    @pB_PalabraClave BIT,
+    @pC_Descripcion NVARCHAR(1000) = NULL,
     @pN_CategoriaID INT,
     @pN_TipoDocumento INT,
     @pN_OficinaID INT,
-    @pC_Vigencia NVARCHAR(255),
+    @pC_Vigencia NVARCHAR(255) = NULL,
     @pN_EtapaID INT,
-    @pN_SubClasificacionID INT,
+    @pN_SubClasificacionID INT = NULL,
 	@pB_Activo BIT,
 	@pB_Descargable BIT,
-	@pN_DocToID INT,
+	@pN_DocToID INT = NULL,
     @pN_UsuarioID INT, 
     @pN_OficinaBitacoraID INT,
-    @pC_PalabraClaves NVARCHAR(MAX),
+    @pC_PalabrasClave NVARCHAR(MAX),
     @pC_Doctos NVARCHAR(MAX)
 AS
 BEGIN
@@ -28,6 +27,14 @@ BEGIN
     BEGIN TRANSACTION;
     BEGIN TRY
         -- Validar que todas las referencias existan
+
+        BEGIN
+            IF @pN_SubClasificacionID = 0 SET @pN_SubClasificacionID = NULL
+            IF @pN_DocToID = 0 SET @pN_DocToID = NULL
+            IF @pC_Descripcion = '' SET @pC_Descripcion = NULL
+            IF @pC_Vigencia ='' SET @pC_Vigencia = NULL
+        END;
+
         IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Categoria WHERE TN_Id = @pN_CategoriaID)
         BEGIN
             ROLLBACK TRANSACTION;
@@ -38,7 +45,19 @@ BEGIN
                 @pC_Comando = @pC_Comando,
                 @pN_OficinaID = @pN_OficinaBitacoraID;
 
-            RAISERROR(@pC_Comando, 16, 1);
+            RETURN 1;
+        END
+
+        IF EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Documento WHERE TC_Codigo  = @pC_Codigo)
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SET @pC_Comando = 'Ya existe un documento con ese codigo: '+  @pC_Codigo;
+            EXEC GD.PA_InsertarBitacora 
+                @pN_UsuarioID = @pN_UsuarioID,
+                @pC_Operacion = @pC_Operacion,
+                @pC_Comando = @pC_Comando,
+                @pN_OficinaID = @pN_OficinaBitacoraID;
+
             RETURN 1;
         END
 
@@ -78,7 +97,7 @@ BEGIN
             RETURN 1;
         END
 
-        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Subclasificacion WHERE TN_Id = @pN_SubClasificacionID)
+        IF @pN_SubClasificacionID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Subclasificacion WHERE TN_Id = @pN_SubClasificacionID)
         BEGIN
 			ROLLBACK TRANSACTION;
             SET @pC_Comando = 'La subclasificacion con el Id '+ + CAST(@pN_SubClasificacionID AS NVARCHAR(10)) +' no existe.';
@@ -90,7 +109,7 @@ BEGIN
             RETURN 1;
         END
 
-		IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_DocTo WHERE TN_Id = @pN_DocToID)
+		IF @pN_DocToID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_DocTo WHERE TN_Id = @pN_DocToID)
         BEGIN
 			ROLLBACK TRANSACTION;
             SET @pC_Comando = 'El docto con el Id '+ + CAST(@pN_DocToID AS NVARCHAR(10)) +' no existe.';
@@ -103,8 +122,8 @@ BEGIN
         END
 
         -- Insertar el nuevo documento
-        INSERT INTO GD.TGESTORDOCUMENTAL_Documento (TC_Codigo, TC_Asunto, TC_Descripcion, TB_PalabraClave, TN_CategoriaID, TN_TipoDocumento, TN_OficinaID, TC_Vigencia, TN_EtapaID, TN_SubClasificacionID, TN_DocTo, TB_Activo,TB_Descargable)
-        VALUES (@pC_Codigo, @pC_Asunto, @pC_Descripcion, @pB_PalabraClave, @pN_CategoriaID, @pN_TipoDocumento, @pN_OficinaID, @pC_Vigencia, @pN_EtapaID, @pN_SubClasificacionID,@pN_DocToID,@pB_Activo,@pB_Descargable);
+        INSERT INTO GD.TGESTORDOCUMENTAL_Documento (TC_Codigo, TC_Asunto, TC_Descripcion, TN_CategoriaID, TN_TipoDocumento, TN_OficinaID, TC_Vigencia, TN_EtapaID, TN_SubClasificacionID, TN_DocTo, TB_Activo,TB_Descargable)
+        VALUES (@pC_Codigo, @pC_Asunto, @pC_Descripcion, @pN_CategoriaID, @pN_TipoDocumento, @pN_OficinaID, @pC_Vigencia, @pN_EtapaID, @pN_SubClasificacionID,@pN_DocToID,@pB_Activo,@pB_Descargable);
 
         DECLARE @TN_DocumentoID INT = SCOPE_IDENTITY(); -- Obtener el ID del nuevo documento
 
@@ -155,20 +174,20 @@ BEGIN
                 @pN_OficinaID = @pN_OficinaBitacoraID;
         END
 
-        DECLARE @JSONPalabra NVARCHAR(MAX) = @pC_PalabraClaves;
+        DECLARE @JSONPalabra NVARCHAR(MAX) = @pC_PalabrasClave;
         DECLARE @j INT = 0;
         DECLARE @total_palabras INT = (SELECT COUNT(*) FROM OPENJSON(@JSONPalabra));
 
-        WHILE @i < @total_palabras
+        WHILE @j < @total_palabras
         BEGIN
 
-            DECLARE @PalabraClave NVARCHAR(255) = JSON_VALUE(@JSONPalabra, CONCAT('$[', @i, '].palabraClave'));
+            DECLARE @PalabraClave NVARCHAR(255) = JSON_VALUE(@JSONPalabra, CONCAT('$[', @j, ']'));
 			select @PalabraClave
 
             INSERT INTO GD.TGESTORDOCUMENTAL_Documento_PalabraClave (TN_DocumentoID, TC_PalabraClave)
             VALUES (@TN_DocumentoID, @PalabraClave);
 
-            SET @i = @i + 1;
+            SET @j = @j + 1;
         END   
 
         IF @total_palabras > 0
@@ -201,20 +220,19 @@ CREATE OR ALTER PROCEDURE GD.PA_ActualizarDocumento
     @pN_Id INT,
     @pC_Codigo NVARCHAR(255),
     @pC_Asunto NVARCHAR(255),
-    @pC_Descripcion NVARCHAR(1000),
-    @pB_PalabraClave BIT,
+    @pC_Descripcion NVARCHAR(1000) = NULL,
     @pN_CategoriaID INT,
     @pN_TipoDocumento INT,
     @pN_OficinaID INT,
-    @pC_Vigencia NVARCHAR(255),
+    @pC_Vigencia NVARCHAR(255) = NULL,
     @pN_EtapaID INT,
-    @pN_DocToID INT,
-    @pN_SubClasificacionID INT,
+    @pN_DocToID INT = NULL,
+    @pN_SubClasificacionID INT = NULL,
 	@pB_Activo BIT,
 	@pB_Descargable BIT,
     @pN_UsuarioID INT,  
     @pN_OficinaBitacoraID INT,
-    @pC_PalabraClaves NVARCHAR(MAX),
+    @pC_PalabrasClave NVARCHAR(MAX),
     @pC_Doctos NVARCHAR(MAX)
 AS
 BEGIN
@@ -224,11 +242,31 @@ BEGIN
 
     BEGIN TRANSACTION;
     BEGIN TRY
+
+        BEGIN
+            IF @pN_SubClasificacionID = 0 SET @pN_SubClasificacionID = NULL
+            IF @pN_DocToID = 0 SET @pN_DocToID = NULL
+            IF @pC_Descripcion = '' SET @pC_Descripcion = NULL
+            IF @pC_Vigencia ='' SET @pC_Vigencia = NULL
+        END;
+
         -- Validar que el documento exista
         IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Documento WHERE TN_Id = @pN_Id)
         BEGIN
 			ROLLBACK TRANSACTION;
             SET @pC_Comando = 'El documento con el Id '+ + CAST(@pN_CategoriaID AS NVARCHAR(10)) +' no existe.';
+            EXEC GD.PA_InsertarBitacora 
+                @pN_UsuarioID = @pN_UsuarioID,
+                @pC_Operacion = @pC_Operacion,
+                @pC_Comando = @pC_Comando,
+                @pN_OficinaID = @pN_OficinaBitacoraID;
+            RETURN 1;
+        END
+
+        IF EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Documento WHERE TC_Codigo  = @pC_Codigo AND TN_Id <> @pN_Id)
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SET @pC_Comando = 'Ya existe un documento con ese codigo: '+  @pC_Codigo;
             EXEC GD.PA_InsertarBitacora 
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
@@ -290,7 +328,7 @@ BEGIN
         END
 
         -- Validar que el DocTo exista
-        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_DocTo WHERE TN_Id = @pN_DocToID AND TB_Eliminado = 0)
+        IF @pN_DocToID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_DocTo WHERE TN_Id = @pN_DocToID AND TB_Eliminado = 0)
         BEGIN
 			ROLLBACK TRANSACTION;
             SET @pC_Comando = 'El docto con el Id '+ CAST(@pN_DocToID AS NVARCHAR(10)) +' no existe.';
@@ -303,7 +341,7 @@ BEGIN
         END
 
         -- Validar que la subclasificación exista
-        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Subclasificacion WHERE TN_Id = @pN_SubClasificacionID AND TB_Eliminado = 0)
+        IF @pN_SubClasificacionID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Subclasificacion WHERE TN_Id = @pN_SubClasificacionID AND TB_Eliminado = 0)
         BEGIN
 			ROLLBACK TRANSACTION;
             SET @pC_Comando = 'La subclasificacion con el Id '+ CAST(@pN_SubClasificacionID AS NVARCHAR(10)) +' no existe.';
@@ -320,7 +358,6 @@ BEGIN
         SET TC_Codigo = @pC_Codigo,
             TC_Asunto = @pC_Asunto,
             TC_Descripcion = @pC_Descripcion,
-            TB_PalabraClave = @pB_PalabraClave,
             TN_CategoriaID = @pN_CategoriaID,
             TN_TipoDocumento = @pN_TipoDocumento,
             TN_OficinaID = @pN_OficinaID,
@@ -384,20 +421,23 @@ BEGIN
                 @pN_OficinaID = @pN_OficinaBitacoraID;
         END
 
-        DECLARE @JSONPalabra NVARCHAR(MAX) = @pC_PalabraClaves;
+        DELETE FROM GD.TGESTORDOCUMENTAL_Documento_PalabraClave
+        WHERE TN_DocumentoID = @pN_Id;
+
+        DECLARE @JSONPalabra NVARCHAR(MAX) = @pC_PalabrasClave;
         DECLARE @j INT = 0;
         DECLARE @total_palabras INT = (SELECT COUNT(*) FROM OPENJSON(@JSONPalabra));
 
-        WHILE @i < @total_palabras
+        WHILE @j < @total_palabras
         BEGIN
 
-            DECLARE @PalabraClave NVARCHAR(255) = JSON_VALUE(@JSONPalabra, CONCAT('$[', @i, '].palabraClave'));
+            DECLARE @PalabraClave NVARCHAR(255) = JSON_VALUE(@JSONPalabra, CONCAT('$[', @j, ']'));
 			select @PalabraClave
 
             INSERT INTO GD.TGESTORDOCUMENTAL_Documento_PalabraClave (TN_DocumentoID, TC_PalabraClave)
             VALUES (@pN_Id, @PalabraClave);
 
-            SET @i = @i + 1;
+            SET @j = @j + 1;
         END   
 
         IF @total_palabras > 0
@@ -489,18 +529,15 @@ BEGIN
             @pC_Comando = @pC_Comando,
             @pN_OficinaID = @pN_OficinaID;
 
-        IF EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Documento WHERE TN_Id = @pN_Id and TB_PalabraClave = 1)
-        BEGIN
-            DELETE FROM GD.TGESTORDOCUMENTAL_Documento_PalabraClave
-            WHERE TN_DocumentoID = @pN_Id;
+        DELETE FROM GD.TGESTORDOCUMENTAL_Documento_PalabraClave
+        WHERE TN_DocumentoID = @pN_Id;
 
-            SET @pC_Comando = 'Eliminar palabras claves de documento con ID ' + CAST(@pN_Id AS NVARCHAR(10));
-            EXEC GD.PA_InsertarBitacora 
-            @pN_UsuarioID = @pN_UsuarioID,
-            @pC_Operacion = @pC_Operacion,
-            @pC_Comando = @pC_Comando,
-            @pN_OficinaID = @pN_OficinaID;
-        END
+        SET @pC_Comando = 'Eliminar palabras claves de documento con ID ' + CAST(@pN_Id AS NVARCHAR(10));
+        EXEC GD.PA_InsertarBitacora 
+        @pN_UsuarioID = @pN_UsuarioID,
+        @pC_Operacion = @pC_Operacion,
+        @pC_Comando = @pC_Comando,
+        @pN_OficinaID = @pN_OficinaID;
 
         COMMIT TRANSACTION;
         RETURN 0;
@@ -539,19 +576,25 @@ BEGIN
         D.TN_CategoriaID AS CategoriaID, --
         D.TN_TipoDocumento AS TipoDocumento, --
         D.TN_OficinaID AS OficinaID, --
-        D.TC_Vigencia AS Vigencia, --
+        ISNULL(D.TC_Vigencia,'') AS Vigencia, --
         D.TN_EtapaID AS EtapaID, --
-        D.TN_DocTo AS DocToID, --
-        D.TN_SubClasificacionID AS SubClasificacionID,
+        ISNULL(D.TN_DocTo,0) AS DocToID, --
+        ISNULL(D.TN_SubClasificacionID,0) AS SubClasificacionID,
 		N.TN_Id AS NormaID,--
 		ISNULL(V.VersionID,0) AS VersionID,--
-		C.TN_Id AS ClasificacionID--
+		ISNULL(C.TN_Id,0) AS ClasificacionID,
+        (SELECT 
+            JSON_QUERY((SELECT TC_PalabraClave AS palabraClave
+                        FROM GD.TGESTORDOCUMENTAL_Documento_PalabraClave
+                        WHERE TN_DocumentoID = D.TN_Id
+                        FOR JSON PATH)) 
+        ) AS PalabrasClave
     FROM GD.TGESTORDOCUMENTAL_Documento D
 	JOIN GD.TGESTORDOCUMENTAL_Etapa E on e.TN_Id = d.TN_EtapaID
 	JOIN GD.TGESTORDOCUMENTAL_Norma N ON N.TN_Id = E.TN_NormaID
 	LEFT JOIN Versiones V ON V.TN_DocumentoID = D.TN_Id AND V.rn = 1
-	JOIN GD.TGESTORDOCUMENTAL_Subclasificacion SC ON SC.TN_Id = D.TN_SubClasificacionID
-	JOIN GD.TGESTORDOCUMENTAL_Clasificacion C ON C.TN_Id = SC.TN_ClasificacionID
+	LEFT JOIN GD.TGESTORDOCUMENTAL_Subclasificacion SC ON SC.TN_Id = D.TN_SubClasificacionID
+	LEFT JOIN GD.TGESTORDOCUMENTAL_Clasificacion C ON C.TN_Id = SC.TN_ClasificacionID
 	WHERE D.TB_Eliminado = 0
 END;
 GO
@@ -574,26 +617,31 @@ BEGIN
         D.TN_Id AS Id,
         D.TC_Codigo AS Codigo,
         D.TC_Asunto AS Nombre,
-        D.TC_Descripcion AS Descripcion,
+        ISNULL(D.TC_Descripcion,'') AS Descripcion,
         D.TN_CategoriaID AS CategoriaID,
         D.TN_TipoDocumento AS TipoDocumento,
-        D.TB_PalabraClave AS PalabraClave,
         D.TN_OficinaID AS OficinaID,
-        D.TC_Vigencia AS Vigencia,
+        ISNULL(D.TC_Vigencia,'') AS Vigencia,
         D.TN_EtapaID AS EtapaID,
-        D.TN_DocTo AS DocToID,
-        D.TN_SubClasificacionID AS SubClasificacionID,
+        ISNULL(D.TN_DocTo,0) AS DocToID, 
+        ISNULL(D.TN_SubClasificacionID,0) AS SubClasificacionID,
         N.TN_Id AS NormaID,
         ISNULL(V.TN_NumeroVersion, 0) AS VersionID,
-        C.TN_Id AS ClasificacionID,
+        ISNULL(C.TN_Id,0) AS ClasificacionID,
         D.TB_Descargable AS descargable,
-        V.TC_UrlVersion AS urlVersion
+        V.TC_UrlVersion AS urlVersion,
+        (SELECT 
+            JSON_QUERY((SELECT TC_PalabraClave AS palabraClave
+                        FROM GD.TGESTORDOCUMENTAL_Documento_PalabraClave
+                        WHERE TN_DocumentoID = D.TN_Id
+                        FOR JSON PATH)) 
+        ) AS PalabrasClave
     FROM GD.TGESTORDOCUMENTAL_Documento D
     JOIN GD.TGESTORDOCUMENTAL_Etapa E ON E.TN_Id = D.TN_EtapaID
     JOIN GD.TGESTORDOCUMENTAL_Norma N ON N.TN_Id = E.TN_NormaID
     LEFT JOIN Versiones V ON V.TN_DocumentoID = D.TN_Id AND V.rn = 1
-    JOIN GD.TGESTORDOCUMENTAL_Subclasificacion SC ON SC.TN_Id = D.TN_SubClasificacionID
-    JOIN GD.TGESTORDOCUMENTAL_Clasificacion C ON C.TN_Id = SC.TN_ClasificacionID
+    LEFT JOIN GD.TGESTORDOCUMENTAL_Subclasificacion SC ON SC.TN_Id = D.TN_SubClasificacionID
+    LEFT JOIN GD.TGESTORDOCUMENTAL_Clasificacion C ON C.TN_Id = SC.TN_ClasificacionID
     WHERE D.TB_Eliminado = 0 AND D.TB_Activo = 1 AND V.TB_Eliminado = 0
     ORDER BY D.TN_Id; -- Puedes ajustar el orden según lo necesites
 END;
@@ -674,38 +722,44 @@ BEGIN
         D.TN_Id AS Id, 
         D.TC_Codigo AS Codigo, 
         D.TC_Asunto AS Asunto, 
-        D.TC_Descripcion AS Descripcion, 
-        D.TB_PalabraClave AS PalabraClave, 
+        ISNULL(D.TC_Descripcion,'') AS Descripcion, 
         D.TN_CategoriaID AS CategoriaID, 
         D.TN_TipoDocumento AS TipoDocumento, 
         D.TN_OficinaID AS OficinaID, 
-        D.TC_Vigencia AS Vigencia, 
+        ISNULL(D.TC_Vigencia,'') AS Vigencia, 
         D.TN_EtapaID AS EtapaID, 
-        D.TN_DocTo AS DocToID, 
+        ISNULL(D.TN_DocTo,0) AS DocToID, 
         D.TB_Activo AS Activo, 
         D.TB_Descargable AS Descargable, 
         D.TB_Eliminado AS Eliminado, 
-        D.TN_SubClasificacionID AS SubClasificacionID,
-        N.TN_Id AS NormaID,--
-        C.TN_Id AS ClasificacionID,--
-		ISNULL(V.TN_Id,0) AS VersionID,--
+        ISNULL(D.TN_SubClasificacionID,0) AS SubClasificacionID,
+        N.TN_Id AS NormaID,
+        ISNULL(C.TN_Id,0) AS ClasificacionID,
+        ISNULL(V.TN_Id, 0) AS VersionID,
         (SELECT 
             JSON_QUERY((SELECT TN_DocTo AS docto, TC_DocRelaciona AS docRelacionado
                         FROM GD.TGESTORDOCUMENTAL_Documento_Documento
                         WHERE TN_DocumentoID = @pN_Id
                         FOR JSON PATH)) 
-        ) AS doctos
+        ) AS doctos,
+        (SELECT 
+            JSON_QUERY((SELECT TC_PalabraClave as palabraClave
+                        FROM GD.TGESTORDOCUMENTAL_Documento_PalabraClave
+                        WHERE TN_DocumentoID = @pN_Id
+                        FOR JSON PATH))
+        ) AS PalabrasClave
     FROM GD.TGESTORDOCUMENTAL_Documento D
-	LEFT JOIN GD.TGESTORDOCUMENTAL_Version V ON V.TN_DocumentoID = D.TN_Id
-    JOIN GD.TGESTORDOCUMENTAL_Etapa E on e.TN_Id = D.TN_EtapaID
-	JOIN GD.TGESTORDOCUMENTAL_Norma N ON N.TN_Id = E.TN_NormaID
-    JOIN GD.TGESTORDOCUMENTAL_Subclasificacion SC ON SC.TN_Id = D.TN_SubClasificacionID
-	JOIN GD.TGESTORDOCUMENTAL_Clasificacion C ON C.TN_Id = SC.TN_ClasificacionID
+    LEFT JOIN GD.TGESTORDOCUMENTAL_Version V ON V.TN_DocumentoID = D.TN_Id
+    JOIN GD.TGESTORDOCUMENTAL_Etapa E ON E.TN_Id = D.TN_EtapaID
+    JOIN GD.TGESTORDOCUMENTAL_Norma N ON N.TN_Id = E.TN_NormaID
+    LEFT JOIN GD.TGESTORDOCUMENTAL_Subclasificacion SC ON SC.TN_Id = D.TN_SubClasificacionID
+    LEFT JOIN GD.TGESTORDOCUMENTAL_Clasificacion C ON C.TN_Id = SC.TN_ClasificacionID
     WHERE D.TN_Id = @pN_Id;
 
     RETURN 0; -- Operación exitosa
 END;
 GO
+
 
 EXEC GD.PA_InsertarDocumento
     @pC_Codigo = 'DOC-001',

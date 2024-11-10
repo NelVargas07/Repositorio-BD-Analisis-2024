@@ -76,30 +76,26 @@ BEGIN
         -- Validar que la clasificacion exista
         IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Clasificacion WHERE TN_Id = @pN_Id)
         BEGIN
+            ROLLBACK TRANSACTION;
             SET @pC_Comando = 'La clasificacion con el Id '+ CAST(@pN_Id AS NVARCHAR(10)) +' no existe.';
             EXEC GD.PA_InsertarBitacora 
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
                 @pN_OficinaID = @pN_OficinaID;
-
-            RAISERROR(@pC_Comando, 16, 1);
-            ROLLBACK TRANSACTION;
             RETURN 1;
         END
 
         -- Validar que el nombre no exista para otra clasificacion
         IF EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Clasificacion WHERE TC_Nombre = @pC_Nombre AND TN_Id != @pN_Id)
         BEGIN
+            ROLLBACK TRANSACTION;
             SET @pC_Comando = 'Ya existe una clasificacion con el mismo nombre: ' + @pC_Nombre;
             EXEC GD.PA_InsertarBitacora 
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
                 @pN_OficinaID = @pN_OficinaID;
-
-            RAISERROR(@pC_Comando, 16, 1);
-            ROLLBACK TRANSACTION;
             RETURN 1;
         END
 
@@ -151,29 +147,25 @@ BEGIN
         -- Validar que la clasificacion exista
         IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Clasificacion WHERE TN_Id = @pN_Id)
         BEGIN
+            ROLLBACK TRANSACTION;
             SET @pC_Comando = 'La clasificacion con el Id '+ + CAST(@pN_Id AS NVARCHAR(10)) +' no existe.';
             EXEC GD.PA_InsertarBitacora 
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
                 @pN_OficinaID = @pN_OficinaID;
-
-            RAISERROR(@pC_Comando, 16, 1);
-            ROLLBACK TRANSACTION;
             RETURN 1;
         END
 
 		IF EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Subclasificacion WHERE TN_ClasificacionID = @pN_Id and TB_Eliminado = 0)
         BEGIN
+            ROLLBACK TRANSACTION;
             SET @pC_Comando = 'La clasificacion con el Id ' + CAST(@pN_Id AS NVARCHAR(10)) +' esta ligada a una subclasificacion por lo cual no se puede eliminar.';
             EXEC GD.PA_InsertarBitacora 
                 @pN_UsuarioID = @pN_UsuarioID,
                 @pC_Operacion = @pC_Operacion,
                 @pC_Comando = @pC_Comando,
                 @pN_OficinaID = @pN_OficinaID;
-
-            RAISERROR(@pC_Comando, 16, 1);
-            ROLLBACK TRANSACTION;
             RETURN 1;
         END
 
