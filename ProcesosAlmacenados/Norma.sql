@@ -200,6 +200,25 @@ BEGIN
 END;
 GO
 
+CREATE OR ALTER PROCEDURE GD.PA_ListarNormasusuario
+    @pN_UsuarioID INT
+AS
+BEGIN
+    SELECT 
+        N.TN_Id AS Id,
+        N.TC_Nombre AS Nombre,
+        N.TC_Descripcion AS Descripcion,
+        N.TB_Eliminado AS Eliminado
+    FROM 
+        GD.TGESTORDOCUMENTAL_Norma N
+    INNER JOIN 
+        GD.TGESTORDOCUMENTAL_Norma_Usuario NU ON N.TN_Id = NU.TN_NormaID
+    WHERE 
+        N.TB_Eliminado = 0 
+        AND NU.TN_UsuarioID = @pN_UsuarioID;
+END;
+GO
+
 CREATE OR ALTER PROCEDURE GD.PA_ListarNormas
 AS
 BEGIN

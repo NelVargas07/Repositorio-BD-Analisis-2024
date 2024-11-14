@@ -573,6 +573,8 @@ BEGIN
 		D.TN_Id AS Id, --
         D.TC_Codigo AS Codigo, --
         D.TC_Asunto AS Nombre, --
+        D.TB_Descargable AS descargable,
+        D.TB_Activo AS Activo,
         D.TN_CategoriaID AS CategoriaID, --
         D.TN_TipoDocumento AS TipoDocumento, --
         D.TN_OficinaID AS OficinaID, --

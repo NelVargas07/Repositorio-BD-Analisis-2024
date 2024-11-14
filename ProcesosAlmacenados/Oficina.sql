@@ -141,6 +141,24 @@ BEGIN
 END;
 GO
 
+CREATE PROCEDURE SC.PA_ListarOficinasCodigo
+AS
+BEGIN
+    SELECT O.TN_Id as Id,
+	 CASE 
+            WHEN O.TB_Gestor = 1 THEN O.TC_CodigoOficina + ' - '+ O.TC_Nombre + ' - ' + O.TC_CodigoOficina
+            ELSE O.TC_CodigoOficina + ' - '+ O.TC_Nombre +' - ' + OCG.TC_CodigoOficina
+        END AS Nombre, 
+	O.TC_CodigoOficina as CodigoOficina, 
+	O.TB_Gestor as Gestor, 
+	O.TB_Eliminado as Eliminado 
+    FROM SC.TGESTORDOCUMENTAL_Oficina O
+	LEFT JOIN SC.TGESTORDOCUMENTAL_Oficina_Gestor OG ON OG.TN_OficinaID = O.TN_Id
+	LEFT JOIN SC.TGESTORDOCUMENTAL_Oficina OCG ON OCG.TN_Id = OG.TN_GestorID
+    WHERE O.TB_Eliminado = 0;
+END;
+GO
+
 CREATE PROCEDURE SC.PA_ListarOficinasGestor
 AS
 BEGIN
