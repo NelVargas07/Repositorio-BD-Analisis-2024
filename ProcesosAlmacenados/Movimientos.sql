@@ -16,7 +16,7 @@ BEGIN
         END
 
         -- Validación de la existencia del usuario
-        IF NOT EXISTS (SELECT 1 FROM GD.TGESTORDOCUMENTAL_Usuario WHERE TN_Id = @pN_UsuarioID)
+        IF NOT EXISTS (SELECT 1 FROM SC.TGESTORDOCUMENTAL_Usuario WHERE TN_Id = @pN_UsuarioID)
         BEGIN
             RAISERROR('El usuario especificado no existe.', 16, 1);
             ROLLBACK TRANSACTION;

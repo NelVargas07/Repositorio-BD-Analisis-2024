@@ -6,8 +6,8 @@ CREATE OR ALTER PROCEDURE GD.PA_ReporteBitacoraDeMovimiento
     @pC_NombreDocumento NVARCHAR(255) = NULL,
 	@pN_UsuarioID INT = NULL,
 	@pN_OficinaID INT = NULL,
-    @pF_FechaInicio DATE,
-    @pF_FechaFinal DATE
+    @pF_FechaInicio DATE = NULL,
+    @pF_FechaFinal DATE = NULL
 AS
 BEGIN
 
@@ -16,6 +16,8 @@ BEGIN
         IF @pC_NombreDocumento = '' SET @pC_NombreDocumento = NULL
         IF @pN_UsuarioID = 0 SET @pN_UsuarioID = NULL
         IF @pC_CodigoDocumento = '' SET @pC_CodigoDocumento = NULL
+        IF @pF_FechaInicio = '' SET @pF_FechaInicio = NULL
+        IF @pF_FechaFinal = '' SET @pF_FechaFinal = NULL
     END;
 
     WITH Versiones AS (
@@ -42,28 +44,28 @@ BEGIN
         O.TC_Nombre AS OficinaResponsable
     FROM 
         GD.TGESTORDOCUMENTAL_BitacoraMovimientos BM
-    LEFT JOIN 
-        Versiones V ON V.VersionID = BM.TN_VersionID AND V.rn = 1
+    JOIN 
+        Versiones V ON V.VersionID = BM.TN_VersionID 
     JOIN 
         GD.TGESTORDOCUMENTAL_Documento D ON D.TN_Id = V.TN_DocumentoID 
     JOIN 
         GD.TGESTORDOCUMENTAL_Categoria C ON C.TN_Id = D.TN_CategoriaID
     JOIN 
-        SC.TGESTORDOCUMENTAL_Usuario U ON U.TN_Id = @pN_OficinaID
+        SC.TGESTORDOCUMENTAL_Usuario U ON U.TN_Id = @pN_UsuarioID AND @pN_UsuarioID IS NOT NULL
     JOIN 
-        SC.TGESTORDOCUMENTAL_Oficina O ON O.TN_Id = @pN_OficinaID
+        SC.TGESTORDOCUMENTAL_Oficina O ON O.TN_Id = @pN_OficinaID AND @pN_OficinaID IS NOT NULL
     WHERE 
         (@pC_CodigoDocumento IS NULL OR D.TC_Codigo = @pC_CodigoDocumento)
         AND (@pC_NombreDocumento IS NULL OR D.TC_Asunto LIKE '%' + @pC_NombreDocumento + '%')
-        AND @pF_FechaInicio IS NULL OR CONVERT(DATE, V.TF_FechaCreacion) >= @pF_FechaInicio
-        AND @pF_FechaFinal IS NULL OR CONVERT(DATE, V.TF_FechaCreacion) <= @pF_FechaFinal
+        AND (@pF_FechaInicio IS NULL OR CONVERT(DATE, V.TF_FechaCreacion) >= @pF_FechaInicio)
+        AND (@pF_FechaFinal IS NULL OR CONVERT(DATE, V.TF_FechaCreacion) <= @pF_FechaFinal)
 END
 
 --2 LISTO --
 CREATE OR ALTER PROCEDURE GD.PA_ReporteControlDeVersiones
+    @pN_OficinaID INT = NULL,
     @pC_CodigoDocumento NVARCHAR(255) = NULL,
     @pC_NombreDocumento NVARCHAR(255) = NULL,
-    @pN_OficinaID INT = NULL,
     @pN_TipoDocumento INT = NULL
 AS
 BEGIN
@@ -97,13 +99,14 @@ GO
 CREATE OR ALTER PROCEDURE GD.PA_ReporteDocumentosAntiguos
     @pN_OficinaID INT = NULL,
     @pN_TipoDocumento INT = NULL,
-    @pF_Fecha DATE
+    @pF_Fecha DATE = NULL
 AS
 BEGIN
 
     BEGIN
         IF @pN_OficinaID = 0 SET @pN_OficinaID = NULL
         IF @pN_TipoDocumento = 0 SET @pN_TipoDocumento = NULL
+        IF @pF_Fecha = '' SET @pF_Fecha = NULL
     END;
 
     WITH Versiones AS (
@@ -125,13 +128,13 @@ BEGIN
         V.TF_FechaCreacion AS Fecha,
         O.TC_Nombre AS OficinaResponsable
     FROM GD.TGESTORDOCUMENTAL_Documento D
-    LEFT JOIN Versiones V ON D.TN_Id = V.TN_DocumentoID AND V.rn = 1
+    JOIN Versiones V ON D.TN_Id = V.TN_DocumentoID AND V.rn = 1
     JOIN GD.TGESTORDOCUMENTAL_Categoria C ON C.TN_Id = D.TN_CategoriaID
     JOIN SC.TGESTORDOCUMENTAL_Oficina O ON O.TN_Id = D.TN_OficinaID
     WHERE 
         (@pN_OficinaID IS NULL OR D.TN_OficinaID = @pN_OficinaID )AND
         (@pN_TipoDocumento IS NULL OR D.TN_TipoDocumento = @pN_TipoDocumento) AND
-        CONVERT(DATE, V.TF_FechaCreacion) = @pF_Fecha
+        (@pF_Fecha IS NULL OR CONVERT(DATE, V.TF_FechaCreacion) = @pF_Fecha)
 END
 GO
 
@@ -235,8 +238,8 @@ CREATE OR ALTER PROCEDURE GD.PA_ReporteDescargaDeDocumentos
     @pN_Usuario INT = NULL,
     @pC_CodigoDocumento NVARCHAR(255) = NULL,
     @pC_NombreDocumento NVARCHAR(255) = NULL,
-    @pF_FechaInicio DATE,
-    @pF_FechaFinal DATE
+    @pF_FechaInicio DATE = NULL,
+    @pF_FechaFinal DATE = NULL
 AS
 BEGIN
 
@@ -245,6 +248,8 @@ BEGIN
         IF @pC_NombreDocumento = '' SET @pC_NombreDocumento = NULL
         IF @pN_Usuario = 0 SET @pN_Usuario = NULL
         IF @pC_CodigoDocumento = '' SET @pC_CodigoDocumento = NULL
+        IF @pF_FechaInicio = '' SET @pF_FechaInicio = NULL
+        IF @pF_FechaFinal = '' SET @pF_FechaFinal = NULL
     END;
 
     SELECT 
@@ -260,7 +265,7 @@ BEGIN
         COUNT(CASE WHEN BM.TB_Movimiento = 1 THEN 1 END) AS Descargas
     FROM 
         GD.TGESTORDOCUMENTAL_BitacoraMovimientos BM
-    LEFT JOIN 
+    JOIN 
         GD.TGESTORDOCUMENTAL_Version V ON V.TN_Id = BM.TN_VersionID
     JOIN 
         GD.TGESTORDOCUMENTAL_Documento D ON D.TN_Id = V.TN_DocumentoID 
@@ -291,15 +296,16 @@ GO
 CREATE OR ALTER PROCEDURE GD.PA_ReportesDocSinMovimiento
     @pN_OficinaID INT = NULL,
     @pN_TipoDocumento INT = NULL,
-    @pF_FechaFin DATE,
-    @pF_FechaInicio DATE
+    @pF_FechaFin DATE = NULL,
+    @pF_FechaInicio DATE = NULL
 AS
 BEGIN
 
-    BEGIN
-        IF @pN_OficinaID = 0 SET @pN_OficinaID = NULL
-        IF @pN_TipoDocumento = 0 SET @pN_TipoDocumento = NULL
-    END;
+    -- Ajuste de parámetros a NULL si son valores por defecto
+    IF @pN_OficinaID = 0 SET @pN_OficinaID = NULL;
+    IF @pN_TipoDocumento = 0 SET @pN_TipoDocumento = NULL;
+    IF @pF_FechaFin = '' SET @pF_FechaFin = NULL;
+    IF @pF_FechaInicio = '' SET @pF_FechaInicio = NULL;
 
     WITH Versiones AS (
         SELECT 
@@ -325,22 +331,27 @@ BEGIN
         GD.TGESTORDOCUMENTAL_Documento D
     JOIN 
         GD.TGESTORDOCUMENTAL_Categoria C ON C.TN_Id = D.TN_CategoriaID
-    LEFT JOIN 
+    JOIN 
         Versiones V ON V.TN_DocumentoID = D.TN_Id AND V.rn = 1
     JOIN 
         SC.TGESTORDOCUMENTAL_Oficina O ON O.TN_Id = D.TN_OficinaID
     WHERE 
         (@pN_OficinaID IS NULL OR D.TN_OficinaID = @pN_OficinaID)
         AND (@pN_TipoDocumento IS NULL OR D.TN_TipoDocumento = @pN_TipoDocumento)
-        AND CONVERT(DATE, V.TF_FechaCreacion) BETWEEN @pF_FechaInicio AND @pF_FechaFin
+        AND (
+            @pF_FechaInicio IS NULL OR @pF_FechaFin IS NULL 
+            OR (CONVERT(DATE, V.TF_FechaCreacion) BETWEEN @pF_FechaInicio AND @pF_FechaFin)
+        )
         -- Filtrar documentos sin movimientos en la bitácora
         AND NOT EXISTS (
             SELECT 1
             FROM GD.TGESTORDOCUMENTAL_BitacoraMovimientos BM
             WHERE BM.TN_VersionID = V.VersionID
-        )
-END
+        );
+
+END;
 GO
+
 
 
 

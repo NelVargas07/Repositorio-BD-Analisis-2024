@@ -563,9 +563,10 @@ BEGIN
 	WITH Versiones AS (
 		SELECT 
 			V.TN_Id AS VersionID,
-			V.TN_DocumentoID,
+			V.TN_DocumentoID,   
 			V.TN_NumeroVersion,
 			V.TF_FechaCreacion,
+            V.TB_Eliminado,
 			ROW_NUMBER() OVER (PARTITION BY V.TN_DocumentoID ORDER BY V.TN_NumeroVersion DESC, V.TF_FechaCreacion DESC) AS rn
 		FROM GD.TGESTORDOCUMENTAL_Version V
 	)
@@ -584,24 +585,27 @@ BEGIN
         ISNULL(D.TN_SubClasificacionID,0) AS SubClasificacionID,
 		N.TN_Id AS NormaID,--
 		ISNULL(V.VersionID,0) AS VersionID,--
+        ISNULL(V.TN_NumeroVersion,0) AS NumeroVersion,
 		ISNULL(C.TN_Id,0) AS ClasificacionID,
-        (SELECT 
+        ISNULL((SELECT 
             JSON_QUERY((SELECT TC_PalabraClave AS palabraClave
                         FROM GD.TGESTORDOCUMENTAL_Documento_PalabraClave
                         WHERE TN_DocumentoID = D.TN_Id
                         FOR JSON PATH)) 
-        ) AS PalabrasClave
+        ),'[]') AS PalabrasClave
     FROM GD.TGESTORDOCUMENTAL_Documento D
 	JOIN GD.TGESTORDOCUMENTAL_Etapa E on e.TN_Id = d.TN_EtapaID
 	JOIN GD.TGESTORDOCUMENTAL_Norma N ON N.TN_Id = E.TN_NormaID
-	LEFT JOIN Versiones V ON V.TN_DocumentoID = D.TN_Id AND V.rn = 1
+	LEFT JOIN Versiones V ON V.TN_DocumentoID = D.TN_Id AND V.rn = 1 AND V.TB_Eliminado = 0
 	LEFT JOIN GD.TGESTORDOCUMENTAL_Subclasificacion SC ON SC.TN_Id = D.TN_SubClasificacionID
 	LEFT JOIN GD.TGESTORDOCUMENTAL_Clasificacion C ON C.TN_Id = SC.TN_ClasificacionID
-	WHERE D.TB_Eliminado = 0
+	WHERE D.TB_Eliminado = 0 AND D.TB_Activo = 1
 END;
 GO
 
 CREATE OR ALTER PROCEDURE GD.PA_ListarDocumentosConsulta
+
+    @pN_UsuarioID INT
 AS
 BEGIN
     WITH Versiones AS (
@@ -628,24 +632,44 @@ BEGIN
         ISNULL(D.TN_DocTo,0) AS DocToID, 
         ISNULL(D.TN_SubClasificacionID,0) AS SubClasificacionID,
         N.TN_Id AS NormaID,
-        ISNULL(V.TN_NumeroVersion, 0) AS VersionID,
+        ISNULL(V.VersionID, 0) AS VersionID,
+        ISNULL(V.TN_NumeroVersion,0) AS NumeroVersion,
         ISNULL(C.TN_Id,0) AS ClasificacionID,
         D.TB_Descargable AS descargable,
         V.TC_UrlVersion AS urlVersion,
-        (SELECT 
+        ISNULL((SELECT 
             JSON_QUERY((SELECT TC_PalabraClave AS palabraClave
                         FROM GD.TGESTORDOCUMENTAL_Documento_PalabraClave
                         WHERE TN_DocumentoID = D.TN_Id
                         FOR JSON PATH)) 
-        ) AS PalabrasClave
+        ),'[]') AS PalabrasClave
     FROM GD.TGESTORDOCUMENTAL_Documento D
-    JOIN GD.TGESTORDOCUMENTAL_Etapa E ON E.TN_Id = D.TN_EtapaID
+	JOIN GD.TGESTORDOCUMENTAL_Etapa E ON E.TN_Id = D.TN_EtapaID
     JOIN GD.TGESTORDOCUMENTAL_Norma N ON N.TN_Id = E.TN_NormaID
-    LEFT JOIN Versiones V ON V.TN_DocumentoID = D.TN_Id AND V.rn = 1
-    LEFT JOIN GD.TGESTORDOCUMENTAL_Subclasificacion SC ON SC.TN_Id = D.TN_SubClasificacionID
-    LEFT JOIN GD.TGESTORDOCUMENTAL_Clasificacion C ON C.TN_Id = SC.TN_ClasificacionID
-    WHERE D.TB_Eliminado = 0 AND D.TB_Activo = 1 AND V.TB_Eliminado = 0
-    ORDER BY D.TN_Id; -- Puedes ajustar el orden según lo necesites
+	JOIN GD.TGESTORDOCUMENTAL_Subclasificacion SC ON SC.TN_Id = D.TN_SubClasificacionID
+    JOIN GD.TGESTORDOCUMENTAL_Clasificacion C ON C.TN_Id = SC.TN_ClasificacionID
+    JOIN Versiones V ON V.TN_DocumentoID = D.TN_Id AND V.rn = 1
+    JOIN SC.TGESTORDOCUMENTAL_Oficina_Usuario OU ON OU.TN_UsuarioID = @pN_UsuarioID
+    JOIN SC.TGESTORDOCUMENTAL_Oficina_Gestor OGUsuario ON OGUsuario.TN_OficinaID = OU.TN_OficinaID
+    JOIN SC.TGESTORDOCUMENTAL_Oficina_Gestor OGDocumento ON OGDocumento.TN_OficinaID = D.TN_OficinaID
+    JOIN GD.TGESTORDOCUMENTAL_Categoria CA ON CA.TN_Id = D.TN_CategoriaID
+    WHERE D.TB_Eliminado = 0
+        AND D.TB_Activo = 1
+        AND (
+            CA.TC_Nombre = 'Publico' 
+            OR (
+                CA.TC_Nombre = 'Privado' 
+                AND D.TN_OficinaID = OU.TN_OficinaID
+            )
+            OR (
+                CA.TC_Nombre = 'Publico centro gestor'
+                AND (
+                    D.TN_OficinaID = OU.TN_OficinaID
+                    OR OGUsuario.TN_GestorID = OGDocumento.TN_GestorID
+                )
+            )
+        )
+    ORDER BY D.TN_Id;
 END;
 GO
 
@@ -724,31 +748,35 @@ BEGIN
         D.TN_Id AS Id, 
         D.TC_Codigo AS Codigo, 
         D.TC_Asunto AS Asunto, 
-        ISNULL(D.TC_Descripcion,'') AS Descripcion, 
+        ISNULL(D.TC_Descripcion, '') AS Descripcion, 
         D.TN_CategoriaID AS CategoriaID, 
         D.TN_TipoDocumento AS TipoDocumento, 
         D.TN_OficinaID AS OficinaID, 
-        ISNULL(D.TC_Vigencia,'') AS Vigencia, 
+        ISNULL(D.TC_Vigencia, '') AS Vigencia, 
         D.TN_EtapaID AS EtapaID, 
-        ISNULL(D.TN_DocTo,0) AS DocToID, 
+        ISNULL(D.TN_DocTo, 0) AS DocToID, 
         D.TB_Activo AS Activo, 
         D.TB_Descargable AS Descargable, 
         D.TB_Eliminado AS Eliminado, 
-        ISNULL(D.TN_SubClasificacionID,0) AS SubClasificacionID,
+        ISNULL(D.TN_SubClasificacionID, 0) AS SubClasificacionID,
         N.TN_Id AS NormaID,
-        ISNULL(C.TN_Id,0) AS ClasificacionID,
+        ISNULL(C.TN_Id, 0) AS ClasificacionID,
         ISNULL(V.TN_Id, 0) AS VersionID,
-        (SELECT 
-            JSON_QUERY((SELECT TN_DocTo AS docto, TC_DocRelaciona AS docRelacionado
-                        FROM GD.TGESTORDOCUMENTAL_Documento_Documento
-                        WHERE TN_DocumentoID = @pN_Id
-                        FOR JSON PATH)) 
+        ISNULL(
+            (SELECT 
+                JSON_QUERY((SELECT TN_DocTo AS docto, TC_DocRelaciona AS docRelacionado
+                            FROM GD.TGESTORDOCUMENTAL_Documento_Documento
+                            WHERE TN_DocumentoID = @pN_Id
+                            FOR JSON PATH))
+            ), '[]'
         ) AS doctos,
-        (SELECT 
-            JSON_QUERY((SELECT TC_PalabraClave as palabraClave
-                        FROM GD.TGESTORDOCUMENTAL_Documento_PalabraClave
-                        WHERE TN_DocumentoID = @pN_Id
-                        FOR JSON PATH))
+        ISNULL(
+            (SELECT 
+                JSON_QUERY((SELECT TC_PalabraClave AS palabraClave
+                            FROM GD.TGESTORDOCUMENTAL_Documento_PalabraClave
+                            WHERE TN_DocumentoID = @pN_Id
+                            FOR JSON PATH))
+            ), '[]'
         ) AS PalabrasClave
     FROM GD.TGESTORDOCUMENTAL_Documento D
     LEFT JOIN GD.TGESTORDOCUMENTAL_Version V ON V.TN_DocumentoID = D.TN_Id
@@ -758,27 +786,5 @@ BEGIN
     LEFT JOIN GD.TGESTORDOCUMENTAL_Clasificacion C ON C.TN_Id = SC.TN_ClasificacionID
     WHERE D.TN_Id = @pN_Id;
 
-    RETURN 0; -- Operación exitosa
 END;
 GO
-
-
-EXEC GD.PA_InsertarDocumento
-    @pC_Codigo = 'DOC-001',
-    @pC_Asunto = 'Asunto de prueba',
-    @pC_Descripcion = 'Descripción de ejemplo para el documento',
-    @pC_PalabraClave = 'PalabraClaveEjemplo',
-    @pN_CategoriaID = 1,
-    @pN_TipoDocumento = 1,
-    @pN_OficinaID = 1,
-    @pC_Vigencia = 'Vigente',
-    @pN_EtapaID = 1,
-    @pN_SubClasificacionID = 1,
-    @pB_Activo = 1,
-    @pB_Descargable = 1,
-    @pN_DocToID = 1,
-    @pN_UsuarioID = 1,
-    @pN_OficinaBitacoraID = 1,
-    @pC_Doctos = '[{"docto":1,"docRelacionado":"Ejemplo de documento relacionado"}]'
-
-	select * from GD.TGESTORDOCUMENTAL_Documento
